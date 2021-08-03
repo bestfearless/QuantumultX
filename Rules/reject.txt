@@ -6,12 +6,10 @@ host, unidesk.alicdn.com, reject
 host, ad.caiyunapp.com, reject
 host, heic.alicdn.com, reject
 host, commimg.pddpic.com, reject
-host, flowplus.meituan.net, reject
 host, ossgw.alicdn.com, reject
 host, a1.alibabausercontent.com, reject
 host, a1.alicdn.com, reject
 host, ossgw.alicdn.com, reject
-host, download.dmallcdn.com, reject
 host, ad.12306.cn, reject
 host, ada.baidu.com, reject
 host, als.baidu.com, reject
