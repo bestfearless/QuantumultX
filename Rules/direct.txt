@@ -48,7 +48,6 @@ host-suffix, tmall.com, direct
 host-suffix, sina.com, direct
 host-suffix, ipip.net, direct
 host-suffix, douban.com, direct
-host-suffix, jianshu.com, direct
 host-suffix, steamcontent.com, direct
 host-suffix, steampowered.com, direct
 host-suffix, steamstatic.com, direct
