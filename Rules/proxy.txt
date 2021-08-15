@@ -47,6 +47,8 @@ host-suffix, reuters.com, proxy
 host-suffix, wikipedia.org, proxy
 host-suffix, v2ex.com, proxy
 host-suffix, ip.sb, proxy
+host-suffix, now.com, proxy
+host-suffix, jianshu.com, proxy
 host-suffix, tw, proxy
 # ip-cidr
 ip-cidr, 91.108.4.0/22, proxy
