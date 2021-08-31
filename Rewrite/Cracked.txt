@@ -19,7 +19,7 @@ https:\/\/education\.github\.com\/api\/user url response-body "student":\w+ resp
 https://billing.peakcloud.org/billing/2/user/me url response-body .+ response-body {"response":{"bbuid":"NKoKXsjJnw","usedIntroOfferPeriod":false,"class":"UserModuleBillingResponse","is_in_billing_retry":false,"modules":[{"class":"BillingModuleResponse","name":"com.brainbow.module.peak.PeakModule","subscription":{"status":0,"statusdate":0,"source":{"id":"com.brainbow.peak.arsub_1wtrial_12m3499","cancelable":false,"provider":"itunes","type":"trial"},"bbuid":"NKoKXsjJnw","endTime":3760317603000,"startTime":1491074090000,"pro":true}}]},"metaResponse":{"code":0}}
 
 # 学习管家
-http://wx.xuexiguanjia.org/api/store/setdownload url response-body "status":\w+ response-body "status":200
+http://www.jingshibang.com/api/store/setdownload url response-body "status":\w+ response-body "status":200
 http://wx.xuexiguanjia.org/api/product/detail url response-body "price":"\w+.\w+" response-body "price":"0.00"
 
 # 闪电下载
