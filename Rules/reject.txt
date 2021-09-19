@@ -12,6 +12,7 @@ host, a1.alibabausercontent.com, reject
 host, a1.alicdn.com, reject
 host, ossgw.alicdn.com, reject
 host, ad.12306.cn, reject
+host, m1.ad.10010.com, reject
 host, ada.baidu.com, reject
 host, als.baidu.com, reject
 host, b.bdstatic.com, reject
@@ -89,3 +90,5 @@ host-suffix, looqu.pw, reject
 host-suffix, uptightpercyplug.com, reject
 host-suffix, googleadsserving.cn, reject
 host-suffix, pglstatp-toutiao.com, reject
+host-suffix, umengcloud.com, reject
+host-suffix, umeng.com, reject
