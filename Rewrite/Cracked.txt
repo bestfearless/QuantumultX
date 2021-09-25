@@ -22,8 +22,8 @@ https://billing.peakcloud.org/billing/2/user/me url response-body .+ response-bo
 https://.+.hzsmhw.com\/(vod\/reqplay\/|ucp\/index|getGlobalData|init) url script-response-body https://raw.githubusercontent.com/ddgksf2013/Cuttlefish/master/Crack/xxys.js
 
 # 学习管家
+http://www.jingshibang.com url response-body "price":"\w+.00" response-body "price":"0.00"
 http://www.jingshibang.com/api/store/setdownload url response-body "status":\w+ response-body "status":200
-http://www.jingshibang.com/api/product/detail url response-body "price":"\w+.00" response-body "price":"0.00"
 
 # 闪电下载
 http://app.flashdown365.com/ios/login url response-body "isvip":\w+ response-body "isvip":true
