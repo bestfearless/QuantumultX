@@ -23,7 +23,7 @@ https://.+.hzsmhw.com\/(vod\/reqplay\/|ucp\/index|getGlobalData|init) url script
 
 # 学习管家
 http://www.jingshibang.com/api/store/setdownload url response-body "status":\w+ response-body "status":200
-http://www.jingshibang.com/api/product/detail url response-body "price":"\w+.\w+" response-body "price":"0.00"
+http://www.jingshibang.com/api/product/detail url response-body "price":"\w+.00" response-body "price":"0.00"
 
 # 闪电下载
 http://app.flashdown365.com/ios/login url response-body "isvip":\w+ response-body "isvip":true
