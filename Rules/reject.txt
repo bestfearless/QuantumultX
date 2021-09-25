@@ -55,7 +55,6 @@ host-suffix, googletagmanager.com, reject
 host-suffix, googletagservices.com, reject
 host-suffix, google-analytics.com, reject
 host-suffix, google.cn, reject
-host-suffix, iadsdk.apple.com, reject
 host-suffix, amazon-adsystem.com, reject
 host-suffix, qualifiedcuter.com, reject
 host-suffix, coedhotof.icu, reject
