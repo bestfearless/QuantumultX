@@ -1,11 +1,5 @@
 # host
-host, p48-buy.itunes.apple.com, proxy
-host, testflight.apple.com, proxy
-host, p30-mailws.icloud.com, proxy
-host, p30-smtp.mail.me.com, proxy
 # host-suffix
-host-suffix, xp.apple.com, proxy
-host-suffix, mobileapp.apple.com, proxy
 host-suffix, tradeinterceptor.com, proxy
 host-suffix, ecal.forexproscn.com, proxy
 host-suffix, google.com, proxy
