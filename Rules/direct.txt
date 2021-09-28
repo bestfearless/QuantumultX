@@ -53,6 +53,7 @@ host-suffix, steampowered.com, direct
 host-suffix, steamstatic.com, direct
 host-suffix, battle.net, direct
 host-suffix, blizzard.com, direct
+host-suffix, zaobao.com, direct
 host-suffix, cn, direct
 # ip-cidr
 ip-cidr, 182.254.116.0/24, direct

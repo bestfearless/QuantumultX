@@ -21,7 +21,6 @@ host-suffix, washingtonpost.com, proxy
 host-suffix, twitter.com, proxy
 host-suffix, twimg.com, proxy
 host-suffix, t.co, proxy
-host-suffix, zaobao.com, proxy
 host-suffix, voachinese.com, proxy
 host-suffix, voanews.com, proxy
 host-suffix, wsj.com, proxy
