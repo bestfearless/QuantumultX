@@ -1,4 +1,4 @@
-hostname=cdn.llscdn.com,m.360buyimg.com,cdn-files.jin10.com,i0.hdslb.com
+hostname=cdn.llscdn.com,m.360buyimg.com,cdn-files.jin10.com,i0.hdslb.com,commimg*.pddpic.com
 
 # 英语流利说
 https?://cdn.llscdn.com/diva/.*(.jpeg|jpg|-2.png)$ url reject-200
@@ -11,3 +11,6 @@ https://cdn-files.jin10.com/jtk/.+.jpg$ url reject-200
 
 # bilibili
 https://i0.hdslb.com/bfs/sycp/creative_img/.+.jpg url reject-200
+
+# 拼多多
+https://commimg*.+.pddpic.com/.+.jpeg.+/format/webp url reject-200
