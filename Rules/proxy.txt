@@ -2,6 +2,7 @@
 host, testflight.apple.com, proxy
 host, xp.apple.com, proxy
 # host-suffix
+host-suffix, mobileapp.apple.com, proxy
 host-suffix, tradeinterceptor.com, proxy
 host-suffix, ecal.forexproscn.com, proxy
 host-suffix, google.com, proxy

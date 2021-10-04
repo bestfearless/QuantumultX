@@ -1,5 +1,6 @@
 # host
 host, flowplus.meituan.net, reject
+host, s3plus.meituan.net, reject
 host, business.msstatic.com, reject
 host, cdnfile1.msstatic.com, reject
 host, sta-op.douyucdn.cn, reject
@@ -92,3 +93,4 @@ host-suffix, googleadsserving.cn, reject
 host-suffix, pglstatp-toutiao.com, reject
 host-suffix, umengcloud.com, reject
 host-suffix, umeng.com, reject
+host-suffix, adxadserv.com, reject
