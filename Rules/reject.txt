@@ -1,6 +1,5 @@
 # host
 host, flowplus.meituan.net, reject
-host, img.meituan.net, reject
 host, business.msstatic.com, reject
 host, cdnfile1.msstatic.com, reject
 host, sta-op.douyucdn.cn, reject
