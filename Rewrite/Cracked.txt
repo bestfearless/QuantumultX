@@ -19,7 +19,7 @@ https:\/\/education\.github\.com\/api\/user url response-body "student":\w+ resp
 https://billing.peakcloud.org/billing/2/user/me url response-body .+ response-body {"response":{"bbuid":"NKoKXsjJnw","usedIntroOfferPeriod":false,"class":"UserModuleBillingResponse","is_in_billing_retry":false,"modules":[{"class":"BillingModuleResponse","name":"com.brainbow.module.peak.PeakModule","subscription":{"status":0,"statusdate":0,"source":{"id":"com.brainbow.peak.arsub_1wtrial_12m3499","cancelable":false,"provider":"itunes","type":"trial"},"bbuid":"NKoKXsjJnw","endTime":3760317603000,"startTime":1491074090000,"pro":true}}]},"metaResponse":{"code":0}}
 
 # 小小影视
-https://.+.5iqzj.com\/(vod\/reqplay\/|ucp\/index|getGlobalData|init) url script-response-body https://raw.githubusercontent.com/ddgksf2013/Cuttlefish/master/Crack/xxys.js
+https://.+.judeleshiye.com\/(vod\/reqplay\/|ucp\/index|getGlobalData|init) url script-response-body https://raw.githubusercontent.com/ddgksf2013/Cuttlefish/master/Crack/xxys.js
 
 # 学习管家
 http://www.jingshibang.com url response-body "price":"\w+.00" response-body "price":"0.00"
