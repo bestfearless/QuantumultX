@@ -1,4 +1,9 @@
 # host
+host, search.itunes.apple.com, proxy
+host, mobile.apple.com, proxy
+host, gsa.apple.com, proxy
+host, securemetrics.apple.com, proxy
+host, gsas.apple.com, proxy
 # host-suffix
 host-suffix, mobileapp.apple.com, proxy
 host-suffix, tradeinterceptor.com, proxy
