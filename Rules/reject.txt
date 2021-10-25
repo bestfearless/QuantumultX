@@ -6,6 +6,7 @@ host, sta-op.douyucdn.cn, reject
 host, unidesk.alicdn.com, reject
 host, ad.caiyunapp.com, reject
 host, heic.alicdn.com, reject
+host, gw.alicdn.com, reject
 host, commimg.pddpic.com, reject
 host, ossgw.alicdn.com, reject
 host, a1.alibabausercontent.com, reject
