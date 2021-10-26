@@ -1,12 +1,14 @@
 
 # host
 host, router.asus.com, direct
-host, cn-smp-paymentservices.apple.com, direct
-host, iosapps.itunes.apple.com, direct
-host, osxapps.itunes.apple.com, direct
-host, updates-http.cdn-apple.com, direct
-host, updates.cdn-apple.com, direct
 # host-suffix
+host-suffix, apple.com, direct
+host-suffix, apple-cloudkit.com, direct
+host-suffix, cdn-apple.com, direct
+host-suffix, icloud.com, direct
+host-suffix, icloud-content.com, direct
+host-suffix, me.com, direct
+host-suffix, mzstatic.com, direct
 host-suffix, paypal.com, direct
 host-suffix, paypal.me, direct
 host-suffix, paypalobjects.com, direct
