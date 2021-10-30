@@ -21,6 +21,6 @@ https://billing.peakcloud.org/billing/2/user/me url response-body .+ response-bo
 # 小小影视
 https://.+.judeleshiye.com\/(vod\/reqplay\/|ucp\/index|getGlobalData|init) url script-response-body https://raw.githubusercontent.com/ddgksf2013/Cuttlefish/master/Crack/xxys.js
 
-# 学习管家
+# 北京题库
 http://www.jingshibang.com url response-body "price":"\w+.00" response-body "price":"0.00"
-http://www.jingshibang.com/api/store/setdownload url response-body "status":\w+ response-body "status":200
+http://www.jingshibang.com/api/store/setdownload url response-body .+ response-body {”status“:200,”msg“:”增加下载记录成功“}
