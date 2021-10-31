@@ -23,4 +23,3 @@ https://.+.judeleshiye.com\/(vod\/reqplay\/|ucp\/index|getGlobalData|init) url s
 
 # 北京题库
 http://www.jingshibang.com/api/store/setdownload url response-body ”status“:\w+ response-body ”status“:200
-http://www.jingshibang.com url response-body "price":"\w+.00" response-body "price":"0.00"
