@@ -57,11 +57,6 @@ host-suffix, zaobao.com, direct
 host-suffix, pinduoduo.com, direct
 host-suffix, cn, direct
 # ip-cidr
-ip-cidr, 10.0.0.0/8, direct
-ip-cidr, 127.0.0.0/8, direct
-ip-cidr, 172.16.0.0/12, direct
-ip-cidr, 192.168.0.0/16, direct
-ip-cidr, 224.0.0.0/24, direct
 ip-cidr, 182.254.116.0/24, direct
 ip-cidr, 198.11.128.0/18, direct
 # geoip
