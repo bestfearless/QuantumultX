@@ -55,6 +55,8 @@ host-suffix, battle.net, direct
 host-suffix, blizzard.com, direct
 host-suffix, zaobao.com, direct
 host-suffix, pinduoduo.com, direct
+host-suffix, xunlei.com, direct
+host-suffix, sandai.net, direct
 host-suffix, cn, direct
 # ip-cidr
 ip-cidr, 182.254.116.0/24, direct
