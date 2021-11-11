@@ -19,10 +19,10 @@ https:\/\/education\.github\.com\/api\/user url response-body "student":\w+ resp
 https://billing.peakcloud.org/billing/2/user/me url response-body .+ response-body {"response":{"bbuid":"NKoKXsjJnw","usedIntroOfferPeriod":false,"class":"UserModuleBillingResponse","is_in_billing_retry":false,"modules":[{"class":"BillingModuleResponse","name":"com.brainbow.module.peak.PeakModule","subscription":{"status":0,"statusdate":0,"source":{"id":"com.brainbow.peak.arsub_1wtrial_12m3499","cancelable":false,"provider":"itunes","type":"trial"},"bbuid":"NKoKXsjJnw","endTime":3760317603000,"startTime":1491074090000,"pro":true}}]},"metaResponse":{"code":0}}
 
 # 小小影视
-https://.+.judeleshiye.com\/(vod\/reqplay\/|ucp\/index|getGlobalData|init) url script-response-body https://raw.githubusercontent.com/ddgksf2013/Cuttlefish/master/Crack/xxys.js
+https://.+.judeleshiye.com\/(vod\/reqplay\/|ucp\/index|getGlobalData|init) url script-response-body https://raw.githubusercontent.com/bestfearless/QuantumultX/Fearless/Scripts/xxys.js
 
 # infuse
-https://buy.itunes.apple.com/verifyReceipt url script-response-body https://raw.githubusercontent.com/sprindjack/scripts/master/res/infuse.js
+https://buy.itunes.apple.com/verifyReceipt url script-response-body https://github.com/bestfearless/QuantumultX/blob/Fearless/Scripts/infuse.js
 
 # 北京题库
 http://www.jingshibang.com/api/store/setdownload url response-body 400 response-body 200
