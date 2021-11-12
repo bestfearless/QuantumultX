@@ -1,4 +1,4 @@
-hostname=i.weread.qq.com,116.128.164.69,140.207.189.105,biz.caiyunapp.com,login.washingtonpost.com,account.wps.*,education.github.com,billing.peakcloud.org,*.judeleshiye.com,buy.itunes.apple.com
+hostname=i.weread.qq.com,116.128.164.69,140.207.189.105,biz.caiyunapp.com,login.washingtonpost.com,account.wps.cn,education.github.com,billing.peakcloud.org,*.judeleshiye.com,buy.itunes.apple.com
 
 # 微信读书
 https://i.weread.qq.com/pay/memberCardSummary url response-body "expired":\w+,"isPaying":\w+,"permanent":\w+,(.+),"remainTime":\w+,(.+)\}(,"freeBookIds":\[\],|,)"timestamp" response-body "expired":0,"isPaying":1,"permanent":1,$1,"remainTime":3760272085,$2,},"freeBookIds":[],"timestamp"
@@ -10,7 +10,7 @@ https://biz.caiyunapp.com/v2/user\?app_name\=weather$ url response-body "svip_ex
 https://login.washingtonpost.com/identity/oauth/v1/profile url response-body .+ response-body {"gracePeriod":345600000,"deviceStore":"apple","profile_pic_url":"","title":"Premium Digital","expirationDate":"2089-02-27T00:47:28","source":"DEVICE","currentRateID":504,"loginId":"","displayName":"","loginProvider":"","shortTitle":"Premium Digital","isActive":true,"subscriptionID":"24200653","subAcctMgmt":"28,PREMIUM,504,DEVICE,SUBSCRIBER,f,DEVICE,AETYPE=CD","subdata":"OK","sourceType":"FREE","subSource":"App Store","email":"","secureLoginID":"","iddata":"OK","firstName":"","institutional":false,"subDuration":"0.00/9999 days","product":"PREMIUM","subStatus":"A","subAttributes":{"AETYPE":"CD"},"lastName":""}
 
 # Wps
-https://account.wps.*/api/users url response-body "has_ad":\w,"memberid":\w+,"expire_time":\w+ response-body "has_ad":0,"memberid":20,"expire_time":3760317603
+https://account.wps.cn/api/users url response-body .+ response-body {"exp":0,"level":3,"privilege":[{"spid":"data_recover","times":0,"expire_time":3760272085},{"spid":"ocr","times":0,"expire_time":3760272085},{"spid":"pdf2doc","times":0,"expire_time":3760272085},{"spid":"pdf_merge","times":0,"expire_time":3760272085},{"spid":"pdf_sign","times":0,"expire_time":3760272085},{"spid":"pdf_split","times":0,"expire_time":3760272085}],"result":"ok","total_buy":0,"total_cost":-30,"userid":918663422,"vip":{"name":"超级会员","has_ad":0,"memberid":40,"expire_time":3760272085,"enabled":[{"memberid":40,"name":"超级会员","expire_time":3760272085},{"memberid":20,"name":"WPS会员","expire_time":3760272085},{"memberid":12,"name":"稻壳会员","expire_time":3760272085}]},"wealth":0,"expire_time":3760272085}
 
 # Workingcopy
 https:\/\/education\.github\.com\/api\/user url response-body "student":\w+ response-body "student":true
