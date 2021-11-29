@@ -1,7 +1,5 @@
-hostname=i.weread.qq.com,116.128.164.69,140.207.189.105,biz.caiyunapp.com,login.washingtonpost.com,account.wps.cn,education.github.com,billing.peakcloud.org,buy.itunes.apple.com,*.judeleshiye.com
+hostname=biz.caiyunapp.com,login.washingtonpost.com,account.wps.cn,education.github.com,billing.peakcloud.org,buy.itunes.apple.com,*.judeleshiye.com
 
-# 微信读书
-https://i.weread.qq.com/pay/memberCardSummary url response-body "isPaying":\w+,"permanent":\w+,(.+),"remainTime":\w+ response-body "isPaying":1,"permanent":1,$1,"remainTime":3760272085
 # ColorfulClouds
 https://biz.caiyunapp.com/v2/user\?app_name\=weather$ url response-body "svip_expired_at":\w+(.*)"vip_type":""(.*)"is_vip":\w+ response-body "svip_expired_at":3760272085$1"vip_type":"s"$2"is_vip":true
 
