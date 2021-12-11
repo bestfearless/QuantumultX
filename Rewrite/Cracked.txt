@@ -1,4 +1,4 @@
-hostname=biz.caiyunapp.com,login.washingtonpost.com,account.wps.cn,education.github.com,billing.peakcloud.org,buy.itunes.apple.com,*.judeleshiye.com
+hostname=biz.caiyunapp.com,login.washingtonpost.com,account.wps.cn,education.github.com,billing.peakcloud.org,*.judeleshiye.com
 
 # ColorfulClouds
 https://biz.caiyunapp.com/v2/user\?app_name\=weather$ url response-body "svip_expired_at":\w+(.*)"vip_type":""(.*)"is_vip":\w+ response-body "svip_expired_at":3760272085$1"vip_type":"s"$2"is_vip":true
@@ -14,9 +14,6 @@ https:\/\/education\.github\.com\/api\/user url response-body "student":\w+ resp
 
 # Peak
 https://billing.peakcloud.org/billing/2/user/me url response-body .+ response-body {"response":{"bbuid":"NKoKXsjJnw","usedIntroOfferPeriod":false,"class":"UserModuleBillingResponse","is_in_billing_retry":false,"modules":[{"class":"BillingModuleResponse","name":"com.brainbow.module.peak.PeakModule","subscription":{"status":0,"statusdate":0,"source":{"id":"com.brainbow.peak.arsub_1wtrial_12m3499","cancelable":false,"provider":"itunes","type":"trial"},"bbuid":"NKoKXsjJnw","endTime":3760317603000,"startTime":1491074090000,"pro":true}}]},"metaResponse":{"code":0}}
-
-# infuse
-https://buy.itunes.apple.com/verifyReceipt url response-body "expires_date":"2021-12-10 06:37:36 Etc/GMT", "expires_date_ms":"1639118256000", "expires_date_pst":"2021-12-09 22:37:36 America/Los_Angeles" response-body "expires_date":"2089-02-27 00:00:00 Etc/GMT", "expires_date_ms":"3760272000000", "expires_date_pst":"2089-02-27 00:00:00 America/Los_Angeles"
 
 # 小小影视
 https://.+.judeleshiye.com\/(vod\/reqplay\/|ucp\/index|getGlobalData|init) url script-response-body https://raw.githubusercontent.com/bestfearless/QuantumultX/Fearless/Scripts/xxys.js
