@@ -58,6 +58,8 @@ host-suffix, xunlei.com, direct
 host-suffix, sandai.net, direct
 host-suffix, yinfans.net, direct
 host-suffix, appstorrent.ru, direct
+host-suffix, torrentmac.net, direct
+host-suffix, mac-torrent-download.net, direct
 host-suffix, cn, direct
 # ip-cidr
 ip-cidr, 10.0.0.0/8, direct
