@@ -1,4 +1,4 @@
-hostname=cdn.llscdn.com,m.360buyimg.com,cdn-files.jin10.com,*.hdslb.com,commimg*.pddpic.com,img.meituan.net
+hostname=cdn.llscdn.com,m.360buyimg.com,cdn-files.jin10.com,*.hdslb.com,commimg*.pddpic.com
 
 # 英语流利说
 https?://cdn.llscdn.com/diva/.*(.jpeg|jpg|-2.png)$ url reject-200
@@ -14,6 +14,3 @@ https://.*.hdslb.com/bfs/sycp/creative_img url reject-200
 
 # 拼多多
 https://commimg*.+.pddpic.com/.+.jpeg.+/format/webp url reject-200
-
-# 美团
-https://img.meituan.net/midas/.+.gif url reject-200
