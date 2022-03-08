@@ -1,4 +1,6 @@
 # host
+host, events-live.apple.com, proxy
+host, events-delivery.apple.com, proxy
 # host-suffix
 host-suffix, mobileapp.apple.com, proxy
 host-suffix, tradeinterceptor.com, proxy

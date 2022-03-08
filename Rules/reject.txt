@@ -1,4 +1,5 @@
 # host
+host, imgcps.jd.com, reject
 host, flowplus.meituan.net, reject
 host, business.msstatic.com, reject
 host, cdnfile1.msstatic.com, reject
