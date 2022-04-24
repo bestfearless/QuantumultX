@@ -1,4 +1,3 @@
-
 # host
 host, router.asus.com, direct
 # host-suffix
@@ -14,6 +13,13 @@ host-suffix, paypal.me, direct
 host-suffix, paypalobjects.com, direct
 host-suffix, workingcopyapp.com, direct
 host-suffix, gitee.com, direct
+host-suffix, contentstack.io, direct
+host-suffix, hp-mns.com, direct
+host-suffix, ws-hp.com, direct
+host-suffix, roamprint.com, direct
+host-suffix, urbanairship.com, direct
+host-suffix, hpsmart.com, direct
+host-suffix, hp.com, direct
 host-suffix, jd.com, direct
 host-suffix, jin10.com, direct
 host-suffix, taobao.com, direct
