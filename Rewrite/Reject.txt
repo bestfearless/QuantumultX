@@ -1,4 +1,4 @@
-hostname=cdn.llscdn.com,m.360buyimg.com,cdn-files.jin10.com,*.hdslb.com,commimg*.pddpic.com,cdn.*.chelaileapp.cn, web.chelaile.net.cn
+hostname=cdn.llscdn.com,m.360buyimg.com,cdn-files.jin10.com,*.hdslb.com,commimg*.pddpic.com,cdn.*.chelaileapp.cn,web.chelaile.net.cn
 
 # 英语流利说
 https?://cdn.llscdn.com/diva/.*(.jpeg|jpg|-2.png)$ url reject-200
