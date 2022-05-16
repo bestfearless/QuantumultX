@@ -1,4 +1,4 @@
-hostname=biz.caiyunapp.com,login.washingtonpost.com,account.wps.cn,education.github.com,billing.peakcloud.org,*.hzsmhw.com
+hostname=biz.caiyunapp.com,login.washingtonpost.com,account.wps.cn,education.github.com,billing.peakcloud.org
 
 # ColorfulClouds
 https://biz.caiyunapp.com/v2/user\?app_name\=weather$ url response-body "svip_expired_at":\w+(.*)"vip_type":""(.*)"is_vip":\w+ response-body "svip_expired_at":3760272085$1"vip_type":"s"$2"is_vip":true
@@ -14,9 +14,6 @@ https:\/\/education\.github\.com\/api\/user url response-body "student":\w+ resp
 
 # Peak
 https://billing.peakcloud.org/billing/2/user/me url response-body .+ response-body {"response":{"bbuid":"NKoKXsjJnw","usedIntroOfferPeriod":false,"class":"UserModuleBillingResponse","is_in_billing_retry":false,"modules":[{"class":"BillingModuleResponse","name":"com.brainbow.module.peak.PeakModule","subscription":{"status":0,"statusdate":0,"source":{"id":"com.brainbow.peak.arsub_1wtrial_12m3499","cancelable":false,"provider":"itunes","type":"trial"},"bbuid":"NKoKXsjJnw","endTime":3760317603000,"startTime":1491074090000,"pro":true}}]},"metaResponse":{"code":0}}
-
-# 小小影视
-https://.+.hzsmhw.com\/(vod\/reqplay\/|ucp\/index|getGlobalData|init) url script-response-body https://raw.githubusercontent.com/bestfearless/QuantumultX/Fearless/Scripts/xxys.js
 
 # 北京题库
 http://www.jingshibang.com/api/store/setdownload url response-body 400 response-body 200
