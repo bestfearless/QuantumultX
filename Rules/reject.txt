@@ -14,9 +14,6 @@ host, a1.alicdn.com, reject
 host, ossgw.alicdn.com, reject
 host, ad.12306.cn, reject
 host, m1.ad.10010.com, reject
-host, upos-sz-staticks3.bilivideo.com, reject
-host, upos-sz-staticcos.bilivideo.com, reject
-host, upos-sz-static.bilivideo.com, reject
 host, ada.baidu.com, reject
 host, als.baidu.com, reject
 host, b.bdstatic.com, reject
