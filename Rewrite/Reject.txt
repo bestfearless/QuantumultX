@@ -1,4 +1,4 @@
-hostname=cdn.llscdn.com,m.360buyimg.com,cdn-files.jin10.com,*.hdslb.com,commimg*.pddpic.com,m.ykimg.com,img.alicdn.com
+hostname=cdn.llscdn.com,m.360buyimg.com,cdn-files.jin10.com,commimg*.pddpic.com,m.ykimg.com,img.alicdn.com
 
 # 英语流利说
 https?://cdn.llscdn.com/diva/.*(.jpeg|jpg|-2.png)$ url reject-200
@@ -8,12 +8,6 @@ https://m.360buyimg.com/mobilecms/s\d{3,4}x\d{4} url reject-200
 
 # 金十数据
 https://cdn-files.jin10.com/jtk/.+.jpg$ url reject-200
-
-# bilibili
-https?://.*.hdslb.com/bfs/sycp/creative_img/.+.jpg url reject-200
-http://i0.hdslb.com/bfs/feed-admin url reject-200
-http://upos-sz-static.bilivideo.com/.+.mp4 url reject-200
-
 
 # 拼多多
 https://commimg*.+.pddpic.com/.+.jpeg.+/format/webp url reject-200
