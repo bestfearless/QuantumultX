@@ -11,7 +11,7 @@ https://cdn-files.jin10.com/jtk/.+.jpg$ url reject-200
 
 # bilibili
 https?://.*.hdslb.com/bfs/sycp/creative_img/.+.jpg url reject-200
-http://i0.hdslb.com/bfs/feed-admin/.+.mp4 reject-200
+http://i0.hdslb.com/bfs/feed-admin/.+.mp4 url reject-200
 http://upos-sz-static.bilivideo.com/.+.mp4 url reject-200
 
 # 拼多多
