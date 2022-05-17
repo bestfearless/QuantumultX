@@ -100,3 +100,5 @@ host-suffix, pglstatp-toutiao.com, reject
 host-suffix, umengcloud.com, reject
 host-suffix, umeng.com, reject
 host-suffix, adxadserv.com, reject
+#ip-cidr
+ip-cidr, 221.204.16.248/32, reject
