@@ -11,7 +11,3 @@ https://cdn-files.jin10.com/jtk/.+.jpg$ url reject-200
 
 # 拼多多
 https://commimg*.+.pddpic.com/.+.jpeg.+/format/webp url reject-200
-
-# 闲鱼
-https://m.ykimg.com/material url reject-200
-https://img.alicdn.com/imgextra/.+.jpg url reject-200
