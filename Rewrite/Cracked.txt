@@ -1,4 +1,4 @@
-hostname=biz.caiyunapp.com,account.wps.cn,billing.peakcloud.org
+hostname=biz.caiyunapp.com,account.wps.cn,billing.peakcloud.org,login.washingtonpost.com,education.github.com
 
 # ColorfulClouds
 https://biz.caiyunapp.com/v2/user\?app_name\=weather$ url response-body "svip_expired_at":\w+(.*)"vip_type":""(.*)"is_vip":\w+ response-body "svip_expired_at":3760272085$1"vip_type":"s"$2"is_vip":true
@@ -8,6 +8,12 @@ https://account.wps.cn/api/users url response-body .+ response-body {"exp":0,"le
 
 # Peak
 https://billing.peakcloud.org/billing/2/user/me url response-body .+ response-body {"response":{"bbuid":"NKoKXsjJnw","usedIntroOfferPeriod":false,"class":"UserModuleBillingResponse","is_in_billing_retry":false,"modules":[{"class":"BillingModuleResponse","name":"com.brainbow.module.peak.PeakModule","subscription":{"status":0,"statusdate":0,"source":{"id":"com.brainbow.peak.arsub_1wtrial_12m3499","cancelable":false,"provider":"itunes","type":"trial"},"bbuid":"NKoKXsjJnw","endTime":3760317603000,"startTime":1491074090000,"pro":true}}]},"metaResponse":{"code":0}}
+
+# Washingtonpost
+ https://login.washingtonpost.com/identity/oauth/v1/profile url response-body .+ response-body {"gracePeriod":345600000,"deviceStore":"apple","profile_pic_url":"","title":"Premium Digital","expirationDate":"2089-02-27T00:47:28","source":"DEVICE","currentRateID":504,"loginId":"","displayName":"","loginProvider":"","shortTitle":"Premium Digital","isActive":true,"subscriptionID":"24200653","subAcctMgmt":"28,PREMIUM,504,DEVICE,SUBSCRIBER,f,DEVICE,AETYPE=CD","subdata":"OK","sourceType":"FREE","subSource":"App Store","email":"","secureLoginID":"","iddata":"OK","firstName":"","institutional":false,"subDuration":"0.00/9999 days","product":"PREMIUM","subStatus":"A","subAttributes":{"AETYPE":"CD"},"lastName":""}
+ 
+ # Workingcopy
+ https:\/\/education\.github\.com\/api\/user url response-body "student":\w+ response-body "student":true
 
 # 北京题库
 http://www.jingshibang.com/api/store/setdownload url response-body 400 response-body 200
