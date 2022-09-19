@@ -47,6 +47,9 @@ host, hub5idx.v6.shub.sandai.net, reject
 host, hub5emu.v6.shub.sandai.net, reject
 host, hub5btmain.v6.shub.sandai.net, reject
 host, diy-assets.msstatic.com, reject
+host, wxsnsdy.wxs.qq.com, reject
+host, wxsnsdy.wxs.qq.com, reject
+host, ads-video-al.xhscdn.com, reject
 # host-suffix
 host-suffix, pos.baidu.com, reject
 host-suffix, baidustatic.com, reject
