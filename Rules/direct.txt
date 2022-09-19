@@ -65,6 +65,7 @@ host-suffix, sandai.net, direct
 host-suffix, yinfans.net, direct
 host-suffix, torrentmac.net, direct
 host-suffix, mac-torrent-download.net, direct
+host-suffix, zaobao.com, direct
 host-suffix, local, direct
 host-suffix, cn, direct
 # ip-cidr
