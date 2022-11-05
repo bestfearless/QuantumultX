@@ -1,4 +1,6 @@
 # host
+host, ads-img-al.xhscdn.com, reject
+host, images.jin10.com, reject
 host, imgcps.jd.com, reject
 host, flowplus.meituan.net, reject
 host, business.msstatic.com, reject
