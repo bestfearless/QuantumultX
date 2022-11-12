@@ -1,13 +1,40 @@
 # host
 host, router.asus.com, direct
 # host-suffix
+host-suffix, apple.co, direct
 host-suffix, apple.com, direct
+host-suffix, apple.com.cn, direct
+host-suffix, aaplimg.com, direct
 host-suffix, apple-cloudkit.com, direct
+host-suffix, apple-dns.net, direct
 host-suffix, cdn-apple.com, direct
 host-suffix, icloud.com, direct
 host-suffix, icloud-content.com, direct
+host-suffix, itunes.com, direct
 host-suffix, me.com, direct
 host-suffix, mzstatic.com, direct
+host-suffix, digicert.com, direct
+host-suffix, cdn20.com, direct
+host-suffix, akadns.net, direct
+host-suffix, appsto.re, direct
+host-suffix, akamaiedge.net, direct
+host-suffix, edgekey.net, direct
+host-suffix, mwcloudcdn.com, direct
+host-suffix, mwcname.com, direct
+host-suffix, apple-mapkit.com, direct
+host-suffix, applemx-icloud.com, direct
+host-suffix, icloud-isupport.com, direct
+host-suffix, icloudads.net, direct
+host-suffix, icloudbox.net, direct
+host-suffix, icloudbrowser.net, direct
+host-suffix, icloudmusic.net, direct
+host-suffix, icloudmail.net, direct
+host-suffix, icloudnet.net, direct
+host-suffix, icloudpay.net, direct
+host-suffix, icloudsecure.net, direct
+host-suffix, myicloud.net, direct
+host-suffix, icloud-sandbox.com, direct
+host-suffix, apple-livephotoskit.com, direct
 host-suffix, paypal.com, direct
 host-suffix, paypal.me, direct
 host-suffix, paypalobjects.com, direct
@@ -76,5 +103,16 @@ ip-cidr, 192.168.0.0/16, direct
 ip-cidr, 224.0.0.0/24, direct
 ip-cidr, 182.254.116.0/24, direct
 ip-cidr, 198.11.128.0/18, direct
+# apple
+ip-cidr, 17.0.0.0/8, direct
+ip-cidr, 63.92.224.0/19, direct
+ip-cidr, 65.199.22.0/23, direct
+ip-cidr, 139.178.128.0/18, direct
+ip-cidr, 144.178.0.0/19, direct
+ip-cidr, 144.178.36.0/22, direct
+ip-cidr, 144.178.48.0/20, direct
+ip-cidr, 192.35.50.0/24, direct
+ip-cidr, 198.183.17.0/24, direct
+ip-cidr, 205.180.175.0/24, direct
 # geoip
 geoip, cn, direct
