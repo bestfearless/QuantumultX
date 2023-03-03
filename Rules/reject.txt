@@ -51,6 +51,7 @@ host, diy-assets.msstatic.com, reject
 host, wxsnsdy.wxs.qq.com, reject
 host, wxsnsdy.wxs.qq.com, reject
 host, ads-video-al.xhscdn.com, reject
+host, m.ykimg.com, reject
 # host-suffix
 host-suffix, pos.baidu.com, reject
 host-suffix, baidustatic.com, reject
