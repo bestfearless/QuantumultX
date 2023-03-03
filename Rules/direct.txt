@@ -1,5 +1,6 @@
 # host
 host, router.asus.com, direct
+host, api.fuqing.ch, direct
 # host-suffix
 host-suffix, apple.co, direct
 host-suffix, apple.com, direct
@@ -35,6 +36,7 @@ host-suffix, icloudsecure.net, direct
 host-suffix, myicloud.net, direct
 host-suffix, icloud-sandbox.com, direct
 host-suffix, apple-livephotoskit.com, direct
+host-suffix, xiaopeng.com, direct
 host-suffix, paypal.com, direct
 host-suffix, paypal.me, direct
 host-suffix, paypalobjects.com, direct
