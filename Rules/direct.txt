@@ -1,6 +1,10 @@
 # host
 host, router.asus.com, direct
 host, api.fuqing.ch, direct
+host, int.taobaocdn2.xyz, direct
+host, cdn3.jiuse.cloud, direct
+host, asf-doc.mushroomtrack.com, direct
+host, cdn52.akamai-content-network.com, direct
 # host-suffix
 host-suffix, apple.co, direct
 host-suffix, apple.com, direct
