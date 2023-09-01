@@ -1,4 +1,4 @@
-hostname=*.wps.*
+hostname=*.wps.*, spclient.wg.spotify.com, pan.baidu.com,
 
 # 北京题库
 http://www.jingshibang.com/api/store/setdownload url response-body 400 response-body 200
@@ -6,3 +6,9 @@ http://www.jingshibang.com url response-body "price":"\w+.00" response-body "pri
 
 # wps
 ^https:\/\/(vas|account)\.wps\.cn\/(query\/api\/v\d\/list_purchase_info|api\/users\/\d+\/overview) url script-response-body https://raw.githubusercontent.com/510004015/Quantumult_X/Remote/Premium/WPSOffice.js
+
+# Spotify
+^https:\/\/spclient\.wg\.spotify\.com\/(bootstrap\/v1\/bootstrap|user-customization-service\/v1\/customize)$ url script-response-body https://raw.githubusercontent.com/app2smile/rules/master/js/spotify-proto.js
+
+# 百度网盘(倍速)
+^https:\/\/pan\.baidu\.com\/rest\/\d\.\d\/membership\/user url script-response-body https://github.com/ddgksf2013/dev/raw/main/BaiDuCloudProCrack.js
