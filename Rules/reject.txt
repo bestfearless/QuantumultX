@@ -104,5 +104,6 @@ host-suffix, umengcloud.com, reject
 host-suffix, umeng.com, reject
 host-suffix, adxadserv.com, reject
 host-suffix, iadsdk.apple.com, reject
+host-suffix, adsi.com.cn, reject
 #ip-cidr
 ip-cidr, 221.204.16.248/32, reject
