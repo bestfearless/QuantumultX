@@ -1,8 +1,5 @@
 hostname=*.wps.*
 
-# wps
-^https:\/\/(vas|account)\.wps\.cn\/(query\/api\/v\d\/list_purchase_info|api\/users\/\d+\/overview) url script-response-body https://raw.githubusercontent.com/510004015/Quantumult_X/Remote/Premium/WPSOffice.js
-
 # 北京题库
 http://www.jingshibang.com/api/store/setdownload url response-body 400 response-body 200
 http://www.jingshibang.com url response-body "price":"\w+.00" response-body "price":"0.00"
