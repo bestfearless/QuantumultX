@@ -1,4 +1,4 @@
-hostname=*.wps.*, spclient.wg.spotify.com, pan.baidu.com,
+hostname=*.wps.*,www.jingshibang.com
 
 # 北京题库
 https?://www.jingshibang.com/api/store/setdownload url response-body 400 response-body 200
