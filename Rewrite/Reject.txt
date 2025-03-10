@@ -1,4 +1,4 @@
-hostname=m.360buyimg.com,cdn-files.jin10.com,commimg*.pddpic.com,ossgw.alicdn.com, xps11.xiaopeng.com,static.122.gov.cn,sta-op.douyucdn.cn
+hostname=m.360buyimg.com,cdn-files.jin10.com,commimg*.pddpic.com,ossgw.alicdn.com,xps11.xiaopeng.com,static.122.gov.cn,sta-op.douyucdn.cn
 
 # 京东
 https://m.360buyimg.com/mobilecms/s\d{3,4}x\d{4} url reject-200
