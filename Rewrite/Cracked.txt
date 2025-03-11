@@ -1,4 +1,4 @@
-hostname=*.wps.*,www.jingshibang.com
+hostname=www.jingshibang.com
 
 # 北京题库
 https?://www.jingshibang.com/api/store/setdownload url response-body 400 response-body 200
