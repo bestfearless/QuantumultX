@@ -1,0 +1,9 @@
+[rewrite_local]
+# 北京题库
+http-response https?://www.jingshibang.com requires-body=1,max-size=0,script-path=https://raw.githubusercontent.com/NobyDa/Script/master/Surge/JS/jibjab.js
+
+[mitm]
+hostname = www.jingshibang.com
+*/
+body = $response.body.replace(400, "200").replace("price":"\w+.00", ""price":"0.00"")
+$done({body});
