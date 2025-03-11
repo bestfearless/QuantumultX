@@ -1,6 +1,6 @@
 [rewrite_local]
 # 北京题库
-http-response https?://www.jingshibang.com requires-body=1,max-size=0,script-path=https://raw.githubusercontent.com/NobyDa/Script/master/Surge/JS/jibjab.js
+http-response https?://www.jingshibang.com requires-body=1,max-size=0,script-path=https://raw.githubusercontent.com/bestfearless/QuantumultX/refs/heads/Fearless/Rewrite/bjtk
 
 [mitm]
 hostname = www.jingshibang.com
