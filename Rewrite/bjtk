@@ -1,2 +1,2 @@
-body = $response.body.replace(400, "200").replace("price":"\w+.00", ""price":"0.00"")
+body = $response.body.replace("price":"\w+.00", ""price":"0.00"")
 $done({body});
