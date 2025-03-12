@@ -1,6 +1,3 @@
-
-
-
 # DOMAIN
 DOMAIN,adsmind.ugdtimg.com,REJECT
 DOMAIN,pgdt.ugdtimg.com,REJECT-IMG
