@@ -1,4 +1,5 @@
 # DOMAIN
+DOMAIN-SUFFIX,kelee.one,DIRECT
 DOMAIN, router.asus.com, DIRECT
 DOMAIN, api.fuqing.ch, DIRECT
 DOMAIN, int.taobaocdn2.xyz, DIRECT
