@@ -1,3 +1,5 @@
+#!name=Cracked
+#!desc=Cracked
 hostname=www.jingshibang.com
 
 # 北京题库
