@@ -1,7 +1,7 @@
 # DOMAIN
-DOMAIN,ss1.sinaimg.cn,REJECT
-DOMAIN,adsmind.ugdtimg.com,REJECT
-DOMAIN,pgdt.ugdtimg.com,REJECT-IMG
+DOMAIN, ss1.sinaimg.cn, REJECT
+DOMAIN, adsmind.ugdtimg.com, REJECT
+DOMAIN, pgdt.ugdtimg.com, REJECT-IMG
 DOMAIN, ads-img-al.xhscdn.com, REJECT
 DOMAIN, images.jin10.com, REJECT
 DOMAIN, imgcps.jd.com, REJECT
