@@ -1,5 +1,4 @@
 hostname=www.jingshibang.com
 
 # 北京题库
-https?://www.jingshibang.com/api/store/setdownload url response-body 400 response-body 200
-https?://www.jingshibang.com url response-body "price":"\w+.00" response-body "price":"0.00"
+https?://www.jingshibang.com response-body-replace-regex "price":"\w+.00" "price":"0.00" "status":\w+ "status":200
