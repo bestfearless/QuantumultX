@@ -1,5 +1,4 @@
 # DOMAIN
-DOMAIN-SUFFIX,kelee.one,DIRECT
 DOMAIN, router.asus.com, DIRECT
 DOMAIN, api.fuqing.ch, DIRECT
 DOMAIN, int.taobaocdn2.xyz, DIRECT
@@ -8,6 +7,7 @@ DOMAIN, asf-doc.mushroomtrack.com, DIRECT
 DOMAIN, cdn52.akamai-content-network.com, DIRECT
 DOMAIN, www.appstorrent.ru, DIRECT
 # DOMAIN-SUFFIX
+DOMAIN-SUFFIX, kelee.one, DIRECT
 DOMAIN-SUFFIX, apple.co, DIRECT
 DOMAIN-SUFFIX, apple.com, DIRECT
 DOMAIN-SUFFIX, apple.com.cn, DIRECT
