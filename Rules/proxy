@@ -1,0 +1,55 @@
+# host
+host, www.yousuu.com, proxy
+
+# host-suffix
+host-suffix, tradeinterceptor.com, proxy
+host-suffix, ecal.forexproscn.com, proxy
+host-suffix, google.com, proxy
+host-suffix, googlevideo.com, proxy
+host-suffix, youtube.com, proxy
+host-suffix, googleapis.com, proxy
+host-suffix, ampproject.org, proxy   
+host-suffix, gstatic.com, proxy
+host-suffix, ggpht.com, proxy
+host-suffix, ytimg.com, proxy
+host-suffix, gmail.com, proxy
+host-suffix, washingtonpost.com, proxy
+host-suffix, twitter.com, proxy
+host-suffix, twimg.com, proxy
+host-suffix, t.co, proxy
+host-suffix, voachinese.com, proxy
+host-suffix, voanews.com, proxy
+host-suffix, wsj.com, proxy
+host-suffix, udn.com, proxy
+host-suffix, bbc.com, proxy
+host-suffix, dw.com, proxy
+host-suffix, yahoo.com, proxy
+host-suffix, t.me, proxy
+host-suffix, pornhub.com, proxy
+host-suffix, avgle.com, proxy
+host-suffix, netflav.com, proxy
+host-suffix, dropbox.com, proxy
+host-suffix, medium.com, proxy
+host-suffix, github.com, proxy
+host-suffix, githubusercontent.com, proxy
+host-suffix, facebook.com, proxy
+host-suffix, facebook.net, proxy
+host-suffix, reddit.com, proxy
+host-suffix, jable.tv, proxy
+host-suffix, je51.com, proxy
+host-suffix, yazhouse8.com, proxy
+host-suffix, reuters.com, proxy
+host-suffix, wikipedia.org, proxy
+host-suffix, v2ex.com, proxy
+host-suffix, ip.sb, proxy
+host-suffix, now.com, proxy
+host-suffix, jianshu.com, proxy
+host-suffix, x.com, proxy
+host-suffix, tw, proxy
+
+# ip-cidr
+ip-cidr, 91.108.4.0/22, proxy
+ip-cidr, 91.108.8.0/21, proxy
+ip-cidr, 91.108.16.0/21, proxy
+ip-cidr, 91.108.56.0/22, proxy
+ip-cidr, 149.154.160.0/20, proxy
