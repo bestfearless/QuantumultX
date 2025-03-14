@@ -1,10 +1,10 @@
-hostname=download.dmallcdn.com,m.360buyimg.com,xps11.xiaopeng.com,static.122.gov.cn,sta-op.douyucdn.cn
+hostname=download.dmallcdn.com,m.360buyimg.com,xps11.xiaopeng.com,static.122.gov.cn,sta-op.douyucdn.cn,img1.360buyimg.com
 
 # 多点
 ^https?:\/\/download\.dmallcdn\.com\/.*\.jpg$ url reject-200
 
 # 京东
-^https?:\/\/m\.360buyimg\.com\/mobilecms\/s\d{3,4}x\d{4} url reject-200
+^https?:\/\/m\.360buyimg\.com\/mobilecms\/s\d+x\d+_jfs\/.*\.jpg$ url reject-200
 
 # 小鹏
 ^https?:\/\/xps11\.xiaopeng\.com\/app\/resource\/pic url reject-200
@@ -12,5 +12,6 @@ hostname=download.dmallcdn.com,m.360buyimg.com,xps11.xiaopeng.com,static.122.gov
 # 12123
 ^https?:\/\/static\.122\.gov\.cn\/.*\.jpg url reject-200
 
-# Douyu
+# 斗鱼
 ^https?:\/\/sta-op\.douyucdn\.cn\/(nggsys|adxdsp|dylamr) url reject-200
+^https?:\/\/img1\.360buyimg\.com\/pop\/jfs\/t1\/.*\.jpg$ url reject-200
