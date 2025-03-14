@@ -1,0 +1,5 @@
+hostname=www.jingshibang.com
+
+# 北京题库
+https?://www.jingshibang.com url response-body "price":"\w+.00" response-body "price":"0.00"
+https?://www.jingshibang.com url response-body "status":\w+ response-body "status":200
