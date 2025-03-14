@@ -13,4 +13,4 @@ https?://xps11.xiaopeng.com/app/resource/pic url reject-200
 https?://static.122.gov.cn/.+.jpg url reject-200
 
 # Douyu
-https?://sta-op.douyucdn.cn/(nggsys|adxdsp) url reject-200
+https?://sta-op.douyucdn.cn/(nggsys|adxdsp|dylamr) url reject-200
