@@ -1,90 +1,129 @@
-// 名称: Quantumult X 终极资源解析器 (KOP-XIAO 增强版)
-// 功能: 多文件hostname合并 + 原版全功能支持 + 参数增强
-// 更新: 2024-04-21 (v2.5.1)
 
-const $tool = {
-  read: (val) => JSON.parse(val),
-  write: (val) => JSON.stringify(val),
-  decode: (val) => decodeURIComponent(val),
-};
-const consoleLog = true;
 
-// ====================== 核心修改点 ======================
-let globalHostnames = new Set(); // 全局存储 hostname
-let globalRules = []; // 全局存储规则
+/**
+ * Quantumult X Resource Parser with Merged Hostnames
+ *
+ * 说明：
+ *  1. 本脚本将整个配置按“hostname = …”作为分块，每个块内包含其对应的规则。
+ *  2. 当不同块的 hostname 有交集时，将它们合并为一个块，合并后的 hostname 列表取并集，规则合并在一起。
+ *  3. 输出时按 Quantumult X 格式生成，hostname 行与后续规则行之间以空行分隔。
+ *
+ * 使用方法：
+ *  processConfig(input) 接受原始配置文本，返回合并后的最终配置文本。
+ *
+ * 例如，使用 Node.js 调用：
+ *    const fs = require('fs');
+ *    const { processConfig } = require('./resource-parser-merged');
+ *    let input = fs.readFileSync('your-config.conf', 'utf8');
+ *    let output = processConfig(input);
+ *    fs.writeFileSync('new-config.conf', output);
+ */
 
-async function Parse() {
-  const [link0, content0] = [$request.url, $response.body];
-  let body = content0;
+function parseResource(input) {
+  // 将整个配置按行拆分，按 hostname 行分块
+  const lines = input.split('\n');
+  const blocks = [];
+  let currentBlock = { hostnames: [], rules: [] };
 
-  try {
-    const rawUrls = link0.split(/,|\|/);
-    for (const url of rawUrls) {
-      const [baseUrl, params] = url.split("#");
-      const response = await fetch({ url: baseUrl });
-      const text = await response.text();
-      const paramsObj = parseParams(params);
-      
-      // 调用原版解析逻辑
-      const result = await KOP_ParseContent(text, paramsObj);
-      
-      // 合并 Hostname (新增逻辑)
-      result.hostnames.forEach(h => {
-        if (!paramsObj.outhn || !h.includes(paramsObj.outhn)) {
-          globalHostnames.add(h);
+  for (let line of lines) {
+    let trimmed = line.trim();
+    // 如果是空行或注释行，直接加入当前块（保留注释有助于阅读）
+    if (trimmed === '' || trimmed.startsWith('#')) {
+      currentBlock.rules.push(line);
+      continue;
+    }
+    // 遇到 hostname 定义时，认为开启新块
+    if (/^hostname\s*=/.test(trimmed)) {
+      // 如果当前块已有内容，则保存后开启新块
+      if (currentBlock.hostnames.length > 0 || currentBlock.rules.length > 0) {
+        blocks.push(currentBlock);
+        currentBlock = { hostnames: [], rules: [] };
+      }
+      // 提取 hostname 列表（支持多个，以逗号分隔）
+      let hostsStr = trimmed.substring('hostname'.length);
+      hostsStr = hostsStr.replace('=', '').trim();
+      let hosts = hostsStr.split(',').map(h => h.trim()).filter(h => h !== '');
+      currentBlock.hostnames = hosts;
+    } else {
+      // 普通规则行直接加入当前块
+      currentBlock.rules.push(line);
+    }
+  }
+  // 将最后一个块加入
+  if (currentBlock.hostnames.length > 0 || currentBlock.rules.length > 0) {
+    blocks.push(currentBlock);
+  }
+  return blocks;
+}
+
+function mergeBlocks(blocks) {
+  // 对所有块进行合并：如果两个块的 hostname 存在交集，则认为它们属于同一组
+  let merged = [];
+  for (let block of blocks) {
+    let mergedBlock = null;
+    for (let mBlock of merged) {
+      // 检查两个 hostname 数组是否有交集
+      if (block.hostnames.some(h => mBlock.hostnames.includes(h))) {
+        mergedBlock = mBlock;
+        break;
+      }
+    }
+    if (mergedBlock) {
+      // 合并 hostname：取并集（避免重复）
+      block.hostnames.forEach(h => {
+        if (!mergedBlock.hostnames.includes(h)) {
+          mergedBlock.hostnames.push(h);
         }
       });
-      
-      // 合并规则 (兼容原版参数)
-      globalRules.push(...result.rules);
+      // 合并规则：简单拼接
+      mergedBlock.rules = mergedBlock.rules.concat(block.rules);
+    } else {
+      merged.push({
+        hostnames: block.hostnames.slice(),
+        rules: block.rules.slice()
+      });
     }
-
-    // 生成最终配置 (关键修改)
-    body = `hostname = ${Array.from(globalHostnames).join(', ')}\n\n${globalRules.join('\n')}`;
-
-  } catch (e) {
-    console.log(`[ERROR] ${e}`);
-    body = content0;
   }
-
-  $done({ body });
+  return merged;
 }
 
-// ====================== 原版功能完整保留 ======================
-// 注意：以下为 KOP-XIAO resource-parser.js 的核心逻辑
-// 为节省篇幅已精简，实际需完整保留原版函数
-
-async function KOP_ParseContent(content, params) {
-  let hostnames = [];
-  let rules = [];
-  
-  // 原版参数处理逻辑（支持 in/out/regex/regout 等）
-  const lines = content.split('\n');
-  lines.forEach(line => {
-    // [原版代码] 处理 hostname 收集
-    if (line.startsWith('hostname')) {
-      hostnames.push(...line.split('=')[1].split(','));
+function outputResource(blocks) {
+  // 将合并后的块生成最终输出文本
+  let output = [];
+  for (let block of blocks) {
+    if (block.hostnames.length > 0) {
+      output.push(`hostname = ${block.hostnames.join(',')}`);
     }
-    
-    // [原版代码] 规则过滤逻辑
-    if (shouldKeepRule(line, params)) {
-      rules.push(line);
-    }
-  });
-
-  return { hostnames, rules };
+    // 添加块内的其他规则
+    output = output.concat(block.rules);
+    output.push(''); // 每个块之间增加一个空行，便于阅读
+  }
+  return output.join('\n');
 }
 
-function parseParams(paramsStr) {
-  const params = {};
-  // [原版代码] 解析参数如 in/out/regex/regout 等
-  return params;
+function processConfig(input) {
+  let blocks = parseResource(input);
+  let merged = mergeBlocks(blocks);
+  let output = outputResource(merged);
+  return output;
 }
 
-function shouldKeepRule(line, params) {
-  // [原版代码] 实现 in/out/regex 等过滤逻辑
-  return true;
+// 如果作为模块使用，导出 processConfig 函数
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { processConfig };
 }
 
-// ====================== 执行入口 ======================
-Parse();
+// 以下为调试示例，可直接在 Node.js 环境运行测试
+if (require.main === module) {
+  const exampleInput = `
+# 小程序etc
+hostname = marketing.etczs.net,gw.etczs.net
+https?://marketing.etczs.net/marketplan/.*.gif url reject-dict
+https://gw.etczs.net/api/activity/marketing/wx/trigger/selectTriggerAppDetail url reject-200
+
+# 多点
+hostname = download.dmallcdn.com
+^https?:\\/\\/download\\.dmallcdn\\.com\\/marketing\\/.*\\.(jpg|png) url reject-200
+`;
+  console.log(processConfig(exampleInput));
+}
