@@ -1,129 +1,76 @@
+// 名称: Quantumult X 纯净 Hostname 合并解析器
+// 功能: 多规则源 Hostname 合并 + 参数过滤
+// 作者: 由您的需求定制
+// 版本: v1.0 (2024-04-21)
 
+// ================== 核心逻辑 ==================
+const consoleLog = true; // 调试开关
+let globalHostnames = new Set(); // 全局存储 hostname
 
-/**
- * Quantumult X Resource Parser with Merged Hostnames
- *
- * 说明：
- *  1. 本脚本将整个配置按“hostname = …”作为分块，每个块内包含其对应的规则。
- *  2. 当不同块的 hostname 有交集时，将它们合并为一个块，合并后的 hostname 列表取并集，规则合并在一起。
- *  3. 输出时按 Quantumult X 格式生成，hostname 行与后续规则行之间以空行分隔。
- *
- * 使用方法：
- *  processConfig(input) 接受原始配置文本，返回合并后的最终配置文本。
- *
- * 例如，使用 Node.js 调用：
- *    const fs = require('fs');
- *    const { processConfig } = require('./resource-parser-merged');
- *    let input = fs.readFileSync('your-config.conf', 'utf8');
- *    let output = processConfig(input);
- *    fs.writeFileSync('new-config.conf', output);
- */
+async function Parse() {
+  const [link0, content0] = [$request.url, $response.body];
+  let body = content0;
 
-function parseResource(input) {
-  // 将整个配置按行拆分，按 hostname 行分块
-  const lines = input.split('\n');
-  const blocks = [];
-  let currentBlock = { hostnames: [], rules: [] };
-
-  for (let line of lines) {
-    let trimmed = line.trim();
-    // 如果是空行或注释行，直接加入当前块（保留注释有助于阅读）
-    if (trimmed === '' || trimmed.startsWith('#')) {
-      currentBlock.rules.push(line);
-      continue;
+  try {
+    const rawUrls = link0.split(/,|\|/); // 支持逗号或竖线分隔多个规则源
+    
+    // 遍历所有规则源
+    for (const url of rawUrls) {
+      const [baseUrl, params] = url.split("#");
+      const paramsObj = parseParams(params); // 解析参数
+      const response = await fetch(baseUrl);
+      const text = await response.text();
+      
+      // 提取 hostname 并合并
+      extractHostnames(text, paramsObj);
     }
-    // 遇到 hostname 定义时，认为开启新块
-    if (/^hostname\s*=/.test(trimmed)) {
-      // 如果当前块已有内容，则保存后开启新块
-      if (currentBlock.hostnames.length > 0 || currentBlock.rules.length > 0) {
-        blocks.push(currentBlock);
-        currentBlock = { hostnames: [], rules: [] };
-      }
-      // 提取 hostname 列表（支持多个，以逗号分隔）
-      let hostsStr = trimmed.substring('hostname'.length);
-      hostsStr = hostsStr.replace('=', '').trim();
-      let hosts = hostsStr.split(',').map(h => h.trim()).filter(h => h !== '');
-      currentBlock.hostnames = hosts;
-    } else {
-      // 普通规则行直接加入当前块
-      currentBlock.rules.push(line);
-    }
+
+    // 生成最终配置
+    body = `hostname = ${Array.from(globalHostnames).join(', ')}`;
+
+  } catch (e) {
+    console.log(`解析失败: ${e}`);
+    body = content0; // 失败时返回原始内容
   }
-  // 将最后一个块加入
-  if (currentBlock.hostnames.length > 0 || currentBlock.rules.length > 0) {
-    blocks.push(currentBlock);
-  }
-  return blocks;
+
+  $done({ body });
 }
 
-function mergeBlocks(blocks) {
-  // 对所有块进行合并：如果两个块的 hostname 存在交集，则认为它们属于同一组
-  let merged = [];
-  for (let block of blocks) {
-    let mergedBlock = null;
-    for (let mBlock of merged) {
-      // 检查两个 hostname 数组是否有交集
-      if (block.hostnames.some(h => mBlock.hostnames.includes(h))) {
-        mergedBlock = mBlock;
-        break;
-      }
-    }
-    if (mergedBlock) {
-      // 合并 hostname：取并集（避免重复）
-      block.hostnames.forEach(h => {
-        if (!mergedBlock.hostnames.includes(h)) {
-          mergedBlock.hostnames.push(h);
+// ================== 工具函数 ==================
+// 提取 hostname 并应用参数过滤
+function extractHostnames(content, params) {
+  const lines = content.split('\n');
+  
+  lines.forEach(line => {
+    line = line.trim();
+    if (!line || line.startsWith('#')) return;
+
+    // 处理 hostname 行
+    if (line.startsWith('hostname')) {
+      const hosts = line.split('=')[1].split(',').map(h => h.trim());
+      hosts.forEach(host => {
+        // 应用 outhn 参数过滤
+        if (!params.outhn || !host.includes(params.outhn)) {
+          globalHostnames.add(host);
         }
       });
-      // 合并规则：简单拼接
-      mergedBlock.rules = mergedBlock.rules.concat(block.rules);
-    } else {
-      merged.push({
-        hostnames: block.hostnames.slice(),
-        rules: block.rules.slice()
-      });
     }
-  }
-  return merged;
+  });
 }
 
-function outputResource(blocks) {
-  // 将合并后的块生成最终输出文本
-  let output = [];
-  for (let block of blocks) {
-    if (block.hostnames.length > 0) {
-      output.push(`hostname = ${block.hostnames.join(',')}`);
+// 解析 URL 参数（例如 #outhn=example.com）
+function parseParams(paramStr) {
+  const params = {};
+  if (!paramStr) return params;
+  
+  paramStr.split('&').forEach(pair => {
+    const [key, value] = pair.split('=');
+    if (key && value) {
+      params[key] = decodeURIComponent(value);
     }
-    // 添加块内的其他规则
-    output = output.concat(block.rules);
-    output.push(''); // 每个块之间增加一个空行，便于阅读
-  }
-  return output.join('\n');
+  });
+  return params;
 }
 
-function processConfig(input) {
-  let blocks = parseResource(input);
-  let merged = mergeBlocks(blocks);
-  let output = outputResource(merged);
-  return output;
-}
-
-// 如果作为模块使用，导出 processConfig 函数
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { processConfig };
-}
-
-// 以下为调试示例，可直接在 Node.js 环境运行测试
-if (require.main === module) {
-  const exampleInput = `
-# 小程序etc
-hostname = marketing.etczs.net,gw.etczs.net
-https?://marketing.etczs.net/marketplan/.*.gif url reject-dict
-https://gw.etczs.net/api/activity/marketing/wx/trigger/selectTriggerAppDetail url reject-200
-
-# 多点
-hostname = download.dmallcdn.com
-^https?:\\/\\/download\\.dmallcdn\\.com\\/marketing\\/.*\\.(jpg|png) url reject-200
-`;
-  console.log(processConfig(exampleInput));
-}
+// 执行入口
+Parse().catch(e => $done({ body: `解析器崩溃: ${e}` }));
