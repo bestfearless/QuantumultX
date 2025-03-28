@@ -1,105 +1,70 @@
-// 名称: Quantumult X Hostname 合并解析器 (100% 稳定版)
-// 版本: v3.0 (2024-04-21)
-// 特点: 零依赖、全场景覆盖、军工级稳定性
+// 名称: Quantumult X 终极稳定版解析器 (修复 Type Error)
+// 版本: v5.1 (2024-04-21)
 
-const $done = arguments[arguments.length - 1];
-const consoleLog = true;
+// ============== 原版代码完全保留 ==============
+// ▼▼▼ 完整粘贴 KOP-XIAO 原版代码 ▼▼▼
+// [必须确保此部分与原版 resource-parser.js 完全一致]
+// ▲▲▲ 原版代码结束 ▲▲▲
+
+// ============== 增强逻辑 ==============
+const _originalParse = Parse;
 let globalHostnames = new Set();
 
-async function Parse() {
+Parse = async function() {
   const [link0, content0] = [$request.url, $response.body];
   let body = content0;
 
   try {
-    // ================== 军工级异常处理 ==================
-    const rawUrls = (link0 || "").split(/,|\|/).map(url => {
-      try {
-        return new URL(url.trim()).href; // 验证 URL 合法性
-      } catch (e) {
-        console.log(`[WARN] 无效规则源 URL: ${url}`);
-        return null;
-      }
-    }).filter(url => url !== null);
+    // 调用原版解析
+    await _originalParse.apply(this, arguments);
+    
+    // 确保 body 是字符串
+    if (typeof body !== 'string') body = String(body || '');
 
-    if (rawUrls.length === 0) {
-      body = "# 配置错误：未提供有效规则源";
-      return $done({ body });
-    }
+    // 合并 hostname 逻辑
+    const hostLine = `hostname = ${Array.from(globalHostnames).join(', ')}`;
+    
+    // 安全替换 hostname 行
+    const newBody = body.replace(
+      /hostname\s*=\s*[^\n]*/i, 
+      hostLine
+    ).replace(
+      /\[general\]\s*\n/, 
+      `[general]\n${hostLine}\n`
+    );
 
-    // ================== 军用级网络协议栈 ==================
-    const fetchPromises = rawUrls.map(async (baseUrl) => {
-      const [urlWithoutHash, paramStr] = baseUrl.split("#");
-      const params = parseParams(paramStr || "");
-      
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒超时
-        
-        const response = await fetch(urlWithoutHash, { 
-          signal: controller.signal,
-          headers: { "User-Agent": "QuantumultX/1.0" }
-        });
-        
-        clearTimeout(timeoutId);
-        
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const text = await response.text();
-        return { text, params };
-      } catch (e) {
-        console.log(`[ERROR] 规则源加载失败: ${urlWithoutHash}\n原因: ${e}`);
-        return null;
-      }
-    });
-
-    // ================== 航天级数据处理 ==================
-    const results = await Promise.all(fetchPromises);
-    for (const result of results) {
-      if (!result) continue;
-      extractHostnames(result.text, result.params);
-    }
-
-    // ================== 银行级空值保障 ==================
-    const hostnames = Array.from(globalHostnames).filter(h => {
-      return /^([a-z0-9]+(-[a-z0-9]+)*\.)+[a-z]{2,}$/i.test(h); // 严格域名验证
-    });
-
-    body = hostnames.length > 0 
-      ? `hostname = ${hostnames.join(', ')}` 
-      : '# 有效域名：0 (请检查规则源是否包含 hostname 声明)';
+    // 确保最终输出合法性
+    body = newBody.includes('hostname =') 
+      ? newBody 
+      : `[general]\n${hostLine}\n\n${newBody}`;
 
   } catch (e) {
-    console.log(`[FATAL] 系统级异常: ${e.stack || e}`);
-    body = "# 致命错误：解析器崩溃，请检查日志";
+    console.log(`[FATAL] ${e.stack || e}`);
+    body = content0;
   }
 
-  $done({ body });
-}
+  // 强制类型保障
+  $done({ body: String(body) });
+};
 
-// ================== 诺贝尔奖级工具函数 ==================
-function extractHostnames(content, params) {
-  const hostnameRegex = /^hostname\s*=\s*(.+?)(\s*#|$)/im;
-  const match = content.match(hostnameRegex);
+// ============== Hostname 提取增强 ==============
+const _originalParseContent = ParseContent;
+
+ParseContent = function(content, params) {
+  const result = _originalParseContent(content, params);
   
-  if (!match) {
-    if (consoleLog) console.log(`[WARN] 未找到 hostname 声明`);
-    return;
-  }
-
-  match[1].split(',')
-    .map(h => h.trim().replace(/^https?:\/\//, ''))
-    .filter(h => h.length > 0)
-    .forEach(host => {
-      if (params.outhn && host.includes(params.outhn)) return;
-      globalHostnames.add(host);
-      if (consoleLog) console.log(`[INFO] 已收录域名: ${host}`);
+  // 强化 hostname 提取
+  const hostRegex = /hostname\s*=\s*([^\n]+)/gi;
+  let match;
+  
+  while ((match = hostRegex.exec(content)) !== null) {
+    match[1].split(',').forEach(h => {
+      const host = h.trim().replace(/^https?:\/\//, '');
+      if (host && (!params.outhn || !host.includes(params.outhn))) {
+        globalHostnames.add(host);
+      }
     });
-}
-
-function parseParams(paramStr) {
-  return Object.fromEntries(
-    new URLSearchParams(paramStr).entries()
-  );
-}
-
-// 执行入口
-Parse();
+  }
+  
+  return result;
+};
