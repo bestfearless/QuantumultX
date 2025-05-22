@@ -1,5 +1,3 @@
-let GlobalHostNameSet = new Set();
-
 /** 
 ☑️ 资源解析器 ©𝐒𝐡𝐚𝐰𝐧  ⟦2025-05-16 10:58⟧
 ----------------------------------------------------------
@@ -346,8 +344,6 @@ function Parser() {
   } else {
     total=""
   }
-  finalConf.push(GetMergedHostName());
-  finalConf.push(GetMergedHostName());
     $done({ content: total });
 }
 
@@ -1256,9 +1252,17 @@ function Rewrite_Filter(subs, Pin, Pout,Preg,Pregout) {
     return Nlist
 }
 
-// 主机名处理
+// 主机名处理（支持合并多行 hostname）
 function HostNamecheck(content, parain, paraout) {
-    var hname = content.replace(/ /g, "").split("=")[1].split(",");
+    // 合并多行 hostname= 开头的配置，并去重
+    var hostLines = content.split(/\r?\n/).filter(line => line.trim().startsWith("hostname="));
+    var allHnames = [];
+    for (var line of hostLines) {
+        var hPart = line.replace(/ /g, "").split("=")[1].split(",");
+        allHnames = allHnames.concat(hPart);
+    }
+    var hname = [...new Set(allHnames)]; // 去重
+
     var nname = [];
     var dname = []; //删除项
     for (var i = 0; i < hname.length; i++) {
@@ -1301,8 +1305,8 @@ function HostNamecheck(content, parain, paraout) {
     if(Pregout){ nname = nname.map(RegexOut).filter(Boolean)
       RegCheck(nname, "主机名hostname", "regout", Pregout) }
     hname = "hostname=" + nname.join(", ");
-    nname.forEach(h => GlobalHostNameSet.add(h));
-    return hname
+    // 返回合并后的 hostname 行
+    return "hostname=" + nname.join(", ");
 }
 
 //Rewrite 筛选的函数
@@ -3923,9 +3927,4 @@ function OR(...args) {
 
 function NOT(array) {
     return array.map(c => !c);
-}
-
-function GetMergedHostName() {
-  if (GlobalHostNameSet.size === 0) return "";
-//   return "hostname=" + Array.from(GlobalHostNameSet).join(",");  <-- 被注释以避免多次输出 hostname
 }
