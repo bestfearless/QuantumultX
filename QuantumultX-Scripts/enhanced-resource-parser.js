@@ -1266,11 +1266,12 @@ function HostNamecheck(contents, parain, paraout) {
         }
     });
 
-    // Process the combined hostnames for filtering
+    // Convert Set to Array for processing
+    const allHostnames = Array.from(combinedHostnames);
     const nname = [];
     const dname = [];
 
-    combinedHostnames.forEach(dd => {
+    allHostnames.forEach(dd => {
         const excludehn = (item) => dd.indexOf(item) !== -1;
 
         if (paraout && paraout.length > 0) {
