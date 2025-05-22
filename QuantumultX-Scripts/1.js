@@ -1,3 +1,5 @@
+let GlobalHostNameSet = new Set();
+
 /** 
 ☑️ 资源解析器 ©𝐒𝐡𝐚𝐰𝐧  ⟦2025-05-16 10:58⟧
 ----------------------------------------------------------
@@ -344,6 +346,7 @@ function Parser() {
   } else {
     total=""
   }
+  finalConf.push(GetMergedHostName());
     $done({ content: total });
 }
 
@@ -1253,81 +1256,53 @@ function Rewrite_Filter(subs, Pin, Pout,Preg,Pregout) {
 }
 
 // 主机名处理
-// 声明一个全局集合用于收集所有有效 hostname
-let GlobalHostNameSet = new Set();
-
 function HostNamecheck(content, parain, paraout) {
     var hname = content.replace(/ /g, "").split("=")[1].split(",");
     var nname = [];
     var dname = []; //删除项
-
     for (var i = 0; i < hname.length; i++) {
-        var dd = hname[i];
+        dd = hname[i]
         const excludehn = (item) => dd.indexOf(item) != -1;
-        if (paraout && paraout != "") {
-            if (!paraout.some(excludehn)) {
+        if (paraout && paraout != "") { //存在 out 参数时
+            if (!paraout.some(excludehn)) { //out 未命中🎯️
                 if (parain && parain != "") {
-                    if (parain.some(excludehn)) {
-                        nname.push(hname[i]);
+                    if (parain.some(excludehn)) { //Pin 命中🎯️
+                        nname.push(hname[i])
                     } else {
-                        dname.push(hname[i]);
-                    }
-                } else {
-                    nname.push(hname[i]);
-                }
-            } else {
-                dname.push(hname[i]);
-            }
-        } else if (parain && parain != "") {
-            if (parain.some(excludehn)) {
-                nname.push(hname[i]);
-            } else {
-                dname.push(hname[i]);
-            }
+                        dname.push(hname[i])
+                    } //Pin 未命中🎯️的记录
+                } else { nname.push(hname[i]) } //无in 参数    
+            } else { dname.push(hname[i]) } //out 参数命中
+        } else if (parain && parain != "") { //不存在 out，但有 in 参数时
+            if (parain.some(excludehn)) { //Pin 命中🎯️
+                nname.push(hname[i])
+            } else { dname.push(hname[i]) }
         } else {
-            nname.push(hname[i]);
+            nname.push(hname[i])
         }
-    }
-
+    } //for j
     if (Pntf0 != 0) {
         if (paraout || parain) {
-            var noname = dname.length <= 10 ? emojino[dname.length] : dname.length;
-            var no1name = nname.length <= 10 ? emojino[nname.length] : nname.length;
+            var noname = dname.length <= 10 ? emojino[dname.length] : dname.length
+            var no1name = nname.length <= 10 ? emojino[nname.length] : nname.length
             if (parain && no1name != " 0️⃣ ") {
-                $notify("🤖 " + "重写引用  ➟ " + "⟦" + subtag + "⟧", "⛔️ 筛选参数: " + pfihn + pfohn, "☠️ 主机名 hostname 中已保留以下" + no1name + "个匹配项:" + "\n ⨷ " + nname.join(","), rwhost_link);
+                $notify("🤖 " + "重写引用  ➟ " + "⟦" + subtag + "⟧", "⛔️ 筛选参数: " + pfihn + pfohn, "☠️ 主机名 hostname 中已保留以下" + no1name + "个匹配项:" + "\n ⨷ " + nname.join(","), rwhost_link)
             } else if (dname.length > 0) {
-                $notify("🤖 " + "重写引用  ➟ " + "⟦" + subtag + "⟧", "⛔️ 筛选参数: " + pfihn + pfohn, "☠️ 主机名 hostname 中已删除以下" + noname + "个匹配项:" + "\n ⨷ " + dname.join(","), rwhost_link);
+                $notify("🤖 " + "重写引用  ➟ " + "⟦" + subtag + "⟧", "⛔️ 筛选参数: " + pfihn + pfohn, "☠️ 主机名 hostname 中已删除以下" + noname + "个匹配项:" + "\n ⨷ " + dname.join(","), rwhost_link)
             }
         }
     }
-
     if (nname.length == 0) {
-        $notify("🤖 " + "重写引用  ➟ " + "⟦" + subtag + "⟧", "⛔️ 筛选参数: " + pfihn + pfohn, "⚠️ 主机名 hostname 中剩余 0️⃣ 项, 请检查参数及原始链接", nan_link);
+        $notify("🤖 " + "重写引用  ➟ " + "⟦" + subtag + "⟧", "⛔️ 筛选参数: " + pfihn + pfohn, "⚠️ 主机名 hostname 中剩余 0️⃣ 项, 请检查参数及原始链接", nan_link)
     }
-
-    // 正则匹配阶段（原有逻辑保留）
-    if (Preg) {
-        nname = nname.map(Regex).filter(Boolean);
-        RegCheck(nname, "主机名hostname", "regex", Preg);
-    }
-    if (Pregout) {
-        nname = nname.map(RegexOut).filter(Boolean);
-        RegCheck(nname, "主机名hostname", "regout", Pregout);
-    }
-
-    // ✅ 合并 hostname 到全局集合中（新增功能）
+    if(Preg){ nname = nname.map(Regex).filter(Boolean)
+      RegCheck(nname, "主机名hostname","regex", Preg) }
+    if(Pregout){ nname = nname.map(RegexOut).filter(Boolean)
+      RegCheck(nname, "主机名hostname", "regout", Pregout) }
+    hname = "hostname=" + nname.join(", ");
     nname.forEach(h => GlobalHostNameSet.add(h));
-
-    // 返回单条记录（格式化后的）
-    return "hostname=" + nname.join(", ");
+    return hname
 }
-
-// ✅ 在最终输出配置时，使用以下函数生成总的 hostname 合并条目
-function GetMergedHostName() {
-    if (GlobalHostNameSet.size === 0) return "";
-    return "hostname=" + Array.from(GlobalHostNameSet).join(", ");
-}
-
 
 //Rewrite 筛选的函数
 function Rcheck(content, param) {
@@ -3947,4 +3922,9 @@ function OR(...args) {
 
 function NOT(array) {
     return array.map(c => !c);
+}
+
+function GetMergedHostName() {
+  if (GlobalHostNameSet.size === 0) return "";
+  return "hostname=" + Array.from(GlobalHostNameSet).join(",");
 }
