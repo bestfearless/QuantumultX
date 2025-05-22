@@ -140,7 +140,6 @@ var Pinfo = mark0 && para1.indexOf("info=") != -1 ? para1.split("info=")[1].spli
 var ntf_flow = 0;
 //常用量
 const Base64 = new Base64Code();
-let GlobalHostNameSet = new Set();
 const escapeRegExp = str => str.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&'); //处理特殊符号以便正则匹配使用
 var link1 = link0.split("#")[0]
 const qxpng = "https://raw.githubusercontent.com/crossutility/Quantumult-X/master/quantumult-x.png" // server sub-info link
@@ -1253,52 +1252,121 @@ function Rewrite_Filter(subs, Pin, Pout,Preg,Pregout) {
     return Nlist
 }
 
-// 主机名处理
-function HostNamecheck(content, parain, paraout) {
-    var hname = content.replace(/ /g, "").split("=")[1].split(",");
-    var nname = [];
-    var dname = []; //删除项
-    for (var i = 0; i < hname.length; i++) {
-        dd = hname[i]
-        const excludehn = (item) => dd.indexOf(item) != -1;
-        if (paraout && paraout != "") { //存在 out 参数时
-            if (!paraout.some(excludehn)) { //out 未命中🎯️
-                if (parain && parain != "") {
-                    if (parain.some(excludehn)) { //Pin 命中🎯️
-                        nname.push(hname[i])
-                    } else {
-                        dname.push(hname[i])
-                    } //Pin 未命中🎯️的记录
-                } else { nname.push(hname[i]) } //无in 参数    
-            } else { dname.push(hname[i]) } //out 参数命中
-        } else if (parain && parain != "") { //不存在 out，但有 in 参数时
-            if (parain.some(excludehn)) { //Pin 命中🎯️
-                nname.push(hname[i])
-            } else { dname.push(hname[i]) }
-        } else {
-            nname.push(hname[i])
-        }
-    } //for j
-    if (Pntf0 != 0) {
-        if (paraout || parain) {
-            var noname = dname.length <= 10 ? emojino[dname.length] : dname.length
-            var no1name = nname.length <= 10 ? emojino[nname.length] : nname.length
-            if (parain && no1name != " 0️⃣ ") {
-                $notify("🤖 " + "重写引用  ➟ " + "⟦" + subtag + "⟧", "⛔️ 筛选参数: " + pfihn + pfohn, "☠️ 主机名 hostname 中已保留以下" + no1name + "个匹配项:" + "\n ⨷ " + nname.join(","), rwhost_link)
-            } else if (dname.length > 0) {
-                $notify("🤖 " + "重写引用  ➟ " + "⟦" + subtag + "⟧", "⛔️ 筛选参数: " + pfihn + pfohn, "☠️ 主机名 hostname 中已删除以下" + noname + "个匹配项:" + "\n ⨷ " + dname.join(","), rwhost_link)
+// 主机名处理函数 - 增强版
+// 功能：合并多行 hostname 配置，支持黑白名单过滤和正则处理
+// ========================
+function HostNamecheck(content, parain = [], paraout = []) {
+    try {
+        // 预处理：参数类型校验和标准化
+        parain = Array.isArray(parain) ? parain : [parain];
+        paraout = Array.isArray(paraout) ? paraout : [paraout];
+
+        // 步骤 1: 合并多行 hostname 配置
+        const hostLines = content.split(/\r?\n/)                  // 兼容不同换行符
+            .map(line => line.trim())                             // 去除首尾空格
+            .filter(line => line.startsWith("hostname="));        // 筛选 hostname 行
+
+        // 合并所有 hostname 并去重
+        let allHnames = [];
+        for (const line of hostLines) {
+            const [, values] = line.split(/hostname\s*=\s*/i);   // 键值分割（忽略大小写）
+            if (values) {
+                allHnames.push(...values.split(',').map(v => v.trim()));
             }
         }
+        allHnames = [...new Set(allHnames)];                      // 去重
+
+        // 步骤 2: 执行黑白名单过滤
+        const [nname, dname] = filterHostnames(allHnames, parain, paraout);
+
+        // 步骤 3: 通知逻辑
+        handleNotifications(nname, dname, parain, paraout);
+
+        // 步骤 4: 正则表达式处理
+        let finalNames = applyRegexFilters(nname, Preg, Pregout);
+
+        // 返回标准化结果
+        return finalNames.length > 0 
+            ? `hostname=${finalNames.join(", ")}` 
+            : ""; // 空结果不返回 hostname=
+
+    } catch (err) {
+        $notify("❌ 主机名处理出错", "请检查脚本输入参数", err.message);
+        return ""; // 返回空字符串防止格式破坏
     }
-    if (nname.length == 0) {
-        $notify("🤖 " + "重写引用  ➟ " + "⟦" + subtag + "⟧", "⛔️ 筛选参数: " + pfihn + pfohn, "⚠️ 主机名 hostname 中剩余 0️⃣ 项, 请检查参数及原始链接", nan_link)
+}
+
+// ========================
+// 核心过滤逻辑
+// ========================
+function filterHostnames(hostnames, include, exclude) {
+    const nname = [];
+    const dname = [];
+
+    for (const host of hostnames) {
+        const isExcluded = exclude.some(item => host.includes(item));
+        const isIncluded = include.length === 0 || include.some(item => host.includes(item));
+
+        if (exclude.length && isExcluded) {
+            dname.push(host);
+        } else if (include.length) {
+            isIncluded ? nname.push(host) : dname.push(host);
+        } else {
+            nname.push(host);
+        }
     }
-    if(Preg){ nname = nname.map(Regex).filter(Boolean)
-      RegCheck(nname, "主机名hostname","regex", Preg) }
-    if(Pregout){ nname = nname.map(RegexOut).filter(Boolean)
-      RegCheck(nname, "主机名hostname", "regout", Pregout) }
-    hname = "hostname=" + nname.join(", ");
-    return hname
+
+    return [nname, dname];
+}
+
+// ========================
+// 通知处理模块
+// ========================
+function handleNotifications(kept, deleted, include, exclude) {
+    if (typeof Pntf0 === "undefined" || Pntf0 === 0) return;
+
+    // 生成表情符号统计
+    const countEmoji = (num) => num <= 10 ? emojino[num] || num : num;
+    const keptCount = countEmoji(kept.length);
+    const delCount = countEmoji(deleted.length);
+
+    // 构建通知消息
+    const title = `🤖 重写引用 ➟ ⟦${subtag}⟧`;
+    const subtitle = `⛔️ 筛选参数: ${include.join(",")} | 排除项: ${exclude.join(",")}`;
+
+    if (include.length && kept.length > 0) {
+        $notify(title, subtitle, `✅ 保留 ${keptCount} 项:\n${kept.join(", ")}`, rwhost_link);
+    } else if (deleted.length > 0) {
+        $notify(title, subtitle, `🗑️ 删除 ${delCount} 项:\n${deleted.join(", ")}`, rwhost_link);
+    }
+
+    if (kept.length === 0) {
+        $notify(title, subtitle, "⚠️ 警告：处理后无有效主机名", nan_link);
+    }
+}
+
+// ========================
+// 正则表达式过滤
+// ========================
+function applyRegexFilters(hostnames, includeRegex, excludeRegex) {
+    let result = hostnames;
+    
+    // 包含正则过滤
+    if (includeRegex) {
+        result = result.map(host => {
+            const match = host.match(new RegExp(includeRegex));
+            return match ? match[0] : null;
+        }).filter(Boolean);
+        RegCheck(result, "主机名", "正则包含", includeRegex);
+    }
+
+    // 排除正则过滤
+    if (excludeRegex) {
+        result = result.filter(host => !new RegExp(excludeRegex).test(host));
+        RegCheck(result, "主机名", "正则排除", excludeRegex);
+    }
+
+    return result;
 }
 
 //Rewrite 筛选的函数
@@ -3919,10 +3987,4 @@ function OR(...args) {
 
 function NOT(array) {
     return array.map(c => !c);
-}
-
-
-function GetMergedHostName() {
-  if (GlobalHostNameSet.size === 0) return "";
-  return "hostname=" + Array.from(GlobalHostNameSet).join(",");
 }
