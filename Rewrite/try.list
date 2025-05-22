@@ -1,0 +1,8 @@
+# > 360儿童卫士
+# hostname = ad.life.360.cn
+# 开屏广告 感谢【别怕我又不乱来】分享
+^https?:\/\/ad\.life\.360\.cn\/v2\/app\/advertisement\/config\?sdk_ver= url reject-dict
+
+# > 36kr
+# hostname = gateway.36kr.com
+^https?:\/\/gateway\.36kr\.com\/api\/adx\/ad\/show url reject
