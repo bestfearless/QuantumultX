@@ -1,3 +1,4 @@
+let GlobalHostNameSet = new Set();
 /** 
 ☑️ 资源解析器 ©𝐒𝐡𝐚𝐰𝐧  ⟦2025-05-16 10:58⟧
 ----------------------------------------------------------
@@ -106,8 +107,6 @@ resource_parser_url = https://raw.githubusercontent.com/KOP-XIAO/QuantumultX/mas
 
 ------------------------------
 */
-let GlobalHostNameSet = new Set();
-
 //beginning 解析器正常使用，調試註釋此部分
 
 let [link0, content0, subinfo] = [$resource.link, $resource.content, $resource.info]
@@ -345,7 +344,9 @@ function Parser() {
   } else {
     total=""
   }
-    $done({ content: total });
+    const mergedHost = GetMergedHostName();
+total = [mergedHost, total].filter(Boolean).join('\n');
+$done({ content: total });
 }
 
 if (typeof($resource)!=="undefined" && PProfile == 0) {
@@ -506,7 +507,9 @@ function ResourceParse() {
         //$notify("添加流量信息","xxx","xxxx")
         $done({ content: total, info: {bytes_used: 3073741824, bytes_remaining: 2147483648, expire_date: 1854193966}});
       //$notify("done?","strange")
-      } else { $done({ content: total });}
+      } else { const mergedHost = GetMergedHostName();
+total = [mergedHost, total].filter(Boolean).join('\n');
+$done({ content: total });}
     } else {
       if(Perror == 0) {
       $notify("❓❓ 友情提示 ➟ "+ "⟦" + subtag + "⟧", "⚠️⚠️ 解析后无有效内容", "🚥🚥 请自行检查相关参数, 或者点击通知跳转并发送链接反馈", bug_link)
@@ -3935,8 +3938,8 @@ function OR(...args) {
 function NOT(array) {
     return array.map(c => !c);
 }
+
 function GetMergedHostName() {
-    if (GlobalHostNameSet.size === 0) return "";
-    return "hostname=" + Array.from(GlobalHostNameSet).join(",");
+  if (GlobalHostNameSet.size === 0) return "";
+  return "hostname=" + Array.from(GlobalHostNameSet).join(",");
 }
-finalConf.push(GetMergedHostName());
