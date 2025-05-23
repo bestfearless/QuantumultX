@@ -1252,70 +1252,69 @@ function Rewrite_Filter(subs, Pin, Pout,Preg,Pregout) {
     return Nlist
 }
 
-// 合并文件中的所有hostname
-function parse(context) {
-    const content = context.content;
-    const lines = content.split('\n');
-    const uniqueHostnames = new Set();
-    const outputLines =;
-    let hostnameLineFound = false; // Flag to track if we've processed a hostname line
+// --- 新增的辅助函数，用于合并 Quantumult X 配置中的多行 hostname ---
+/**
+ * 合并 Quantumult X 配置文本中的所有 'hostname = ...' 行。
+ * 会将所有收集到的 hostname 去重后，合并成一行 'hostname = host1, host2, ...'，
+ * 并放置在返回配置文本的开头。其他所有非 'hostname = ...' 的行会保持其原始相对顺序。
+ *
+ * @param {string} configText 原始配置文本。
+ * @returns {string} 处理后的配置文本。
+ */
+function _qxHostnameGlobalMerger(configText) {
+    // 确保输入是字符串类型，如果不是（例如，可能已经是解析后的对象），则直接返回
+    if (typeof configText !== 'string') {
+        return configText;
+    }
 
-    // Regex to match 'hostname = ' followed by values, optionally ending with a comment.
-    // It captures the hostname list, ignoring leading/trailing spaces and comments.
-    const hostnameRegex = /^\s*hostname\s*=\s*([^;]*?)(?:\s*;.*)?$/i;
+    const lines = configText.split(/\r\n|\r|\n/); // 将配置文本按行分割
+    const collectedHostnames = []; // 用于存储所有收集到的 hostname
+    const otherConfigLines = [];   // 用于存储所有非 'hostname = ...' 的行
+
+    // 正则表达式，用于匹配 'hostname = ' 开头的行，忽略前导空格和 'hostname' 的大小写
+    const hostnamePattern = /^\s*hostname\s*=/i;
 
     for (const line of lines) {
-        const match = line.match(hostnameRegex);
-        if (match) {
-            // Found a hostname line
-            hostnameLineFound = true;
-            const hostnamesString = match.trim();
-            // Split by comma, trim each hostname, and add to the Set
-            hostnamesString.split(',').forEach(h => {
-                const trimmedHostname = h.trim();
-                if (trimmedHostname) { // Ensure no empty strings are added
-                    uniqueHostnames.add(trimmedHostname);
+        const trimmedLine = line.trim(); //去除行首尾的空白字符
+
+        if (hostnamePattern.test(trimmedLine)) { // 如果当前行是 hostname 定义行
+            //尝试提取 '=' 后面的主机名部分
+            const parts = trimmedLine.split('=', 2); // 最多分割成两部分
+            if (parts.length > 1) {
+                const hostnamesString = parts[1].trim(); // 获取 '=' 后面的字符串并去除空白
+                if (hostnamesString) { // 如果主机名字符串不为空
+                    hostnamesString.split(',') // 按逗号分割多个主机名
+                        .map(h => h.trim())    // 去除每个主机名周围的空白
+                        .filter(h => h)        // 过滤掉空的主机名 (例如 "host1,,host2" 中的空隙)
+                        .forEach(h => collectedHostnames.push(h)); // 添加到收集列表中
+                } else {
+                    // 如果是 "hostname =" 后面为空的情况，作为普通行保留
+                    otherConfigLines.push(line);
                 }
-            });
-            // Do NOT add this original hostname line to outputLines yet,
-            // as we will replace all of them with a single merged line later.
+            } else {
+                // 如果行以 "hostname" 开头但没有 "=", 作为普通行保留 (理论上hostnamePattern已匹配则此分支较少进入)
+                otherConfigLines.push(line);
+            }
         } else {
-            // Not a hostname line, add it to the output directly
-            outputLines.push(line);
+            // 如果不是 hostname 定义行，则将其加入到其他配置行的列表中
+            otherConfigLines.push(line);
         }
     }
 
-    // If no hostname lines were found, return the original content
-    if (!hostnameLineFound) {
-        return content;
+    let finalLines = []; // 用于构建最终输出的行数组
+    if (collectedHostnames.length > 0) {
+        // 使用 Set 对收集到的主机名进行去重，并保持首次出现的顺序（Set的特性）
+        const uniqueHostnames = [...new Set(collectedHostnames)];
+        // 构建合并后的 hostname 行
+        finalLines.push(`hostname = ${uniqueHostnames.join(', ')}`);
     }
 
-    // Construct the new merged hostname line
-    const mergedHostnames = Array.from(uniqueHostnames).join(', ');
-    const newHostnameLine = `hostname = ${mergedHostnames}`;
-
-    // Find the best place to insert the new hostname line.
-    // Ideally, it should be in the [general] section or where the first hostname was.
-    // For simplicity and robustness, we'll insert it at the beginning of the file
-    // or just after the [general] section if it exists.
-
-    let insertIndex = 0;
-    let generalSectionFound = false;
-    for (let i = 0; i < outputLines.length; i++) {
-        if (outputLines[i].trim().toLowerCase() === '[general]') {
-            generalSectionFound = true;
-            insertIndex = i + 1; // Insert right after [general]
-            break;
-        }
-    }
-
-    // If [general] section was found, insert the new line there.
-    // Otherwise, insert at the very beginning of the file.
-    outputLines.splice(insertIndex, 0, newHostnameLine);
-
-    // Reconstruct the content
-    return outputLines.join('\n');
+    // 将所有其他配置行追加到最终的行数组中
+    finalLines.push(...otherConfigLines);
+    // 将所有行用换行符连接成最终的配置文本
+    return finalLines.join('\n');
 }
+// --- Hostname 合并辅助函数结束 ---
 
 //分流规则转换及过滤(in&out)，可用于 surge 及 quanx 的 rule-list
 function Rule_Handle(subs, Pout, Pin) {
