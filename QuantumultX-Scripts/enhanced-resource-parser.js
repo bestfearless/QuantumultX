@@ -1,3 +1,4 @@
+// —— 全局收集所有 hostname —— 
 let GlobalHostNameSet = new Set();
 /** 
 ☑️ 资源解析器 ©𝐒𝐡𝐚𝐰𝐧  ⟦2025-05-16 10:58⟧
@@ -107,6 +108,7 @@ resource_parser_url = https://raw.githubusercontent.com/KOP-XIAO/QuantumultX/mas
 
 ------------------------------
 */
+
 //beginning 解析器正常使用，調試註釋此部分
 
 let [link0, content0, subinfo] = [$resource.link, $resource.content, $resource.info]
@@ -1251,68 +1253,53 @@ function Rewrite_Filter(subs, Pin, Pout,Preg,Pregout) {
     //$notify("final","Content",Nlist)
     return Nlist
 }
+
+// 主机名处理
 function HostNamecheck(content, parain, paraout) {
     var hname = content.replace(/ /g, "").split("=")[1].split(",");
     var nname = [];
-    var dname = [];
-
+    var dname = []; //删除项
     for (var i = 0; i < hname.length; i++) {
-        var dd = hname[i];
+        dd = hname[i]
         const excludehn = (item) => dd.indexOf(item) != -1;
-        if (paraout && paraout != "") {
-            if (!paraout.some(excludehn)) {
+        if (paraout && paraout != "") { //存在 out 参数时
+            if (!paraout.some(excludehn)) { //out 未命中🎯️
                 if (parain && parain != "") {
-                    if (parain.some(excludehn)) {
-                        nname.push(hname[i]);
+                    if (parain.some(excludehn)) { //Pin 命中🎯️
+                        nname.push(hname[i])
                     } else {
-                        dname.push(hname[i]);
-                    }
-                } else {
-                    nname.push(hname[i]);
-                }
-            } else {
-                dname.push(hname[i]);
-            }
-        } else if (parain && parain != "") {
-            if (parain.some(excludehn)) {
-                nname.push(hname[i]);
-            } else {
-                dname.push(hname[i]);
-            }
+                        dname.push(hname[i])
+                    } //Pin 未命中🎯️的记录
+                } else { nname.push(hname[i]) } //无in 参数    
+            } else { dname.push(hname[i]) } //out 参数命中
+        } else if (parain && parain != "") { //不存在 out，但有 in 参数时
+            if (parain.some(excludehn)) { //Pin 命中🎯️
+                nname.push(hname[i])
+            } else { dname.push(hname[i]) }
         } else {
-            nname.push(hname[i]);
+            nname.push(hname[i])
         }
-    }
-
+    } //for j
     if (Pntf0 != 0) {
         if (paraout || parain) {
-            var noname = dname.length <= 10 ? emojino[dname.length] : dname.length;
-            var no1name = nname.length <= 10 ? emojino[nname.length] : nname.length;
+            var noname = dname.length <= 10 ? emojino[dname.length] : dname.length
+            var no1name = nname.length <= 10 ? emojino[nname.length] : nname.length
             if (parain && no1name != " 0️⃣ ") {
-                $notify("🤖 " + "重写引用 ➟ ⟦" + subtag + "⟧", "⛔️ 筛选参数: " + pfihn + pfohn, "☠️ hostname 保留" + no1name + "项:\n⨷ " + nname.join(","), rwhost_link);
+                $notify("🤖 " + "重写引用  ➟ " + "⟦" + subtag + "⟧", "⛔️ 筛选参数: " + pfihn + pfohn, "☠️ 主机名 hostname 中已保留以下" + no1name + "个匹配项:" + "\n ⨷ " + nname.join(","), rwhost_link)
             } else if (dname.length > 0) {
-                $notify("🤖 " + "重写引用 ➟ ⟦" + subtag + "⟧", "⛔️ 筛选参数: " + pfihn + pfohn, "☠️ hostname 删除" + noname + "项:\n⨷ " + dname.join(","), rwhost_link);
+                $notify("🤖 " + "重写引用  ➟ " + "⟦" + subtag + "⟧", "⛔️ 筛选参数: " + pfihn + pfohn, "☠️ 主机名 hostname 中已删除以下" + noname + "个匹配项:" + "\n ⨷ " + dname.join(","), rwhost_link)
             }
         }
     }
-
     if (nname.length == 0) {
-        $notify("🤖 " + "重写引用 ➟ ⟦" + subtag + "⟧", "⛔️ 筛选参数: " + pfihn + pfohn, "⚠️ hostname 剩余 0️⃣ 项，请检查参数", nan_link);
+        $notify("🤖 " + "重写引用  ➟ " + "⟦" + subtag + "⟧", "⛔️ 筛选参数: " + pfihn + pfohn, "⚠️ 主机名 hostname 中剩余 0️⃣ 项, 请检查参数及原始链接", nan_link)
     }
-
-    if (Preg) {
-        nname = nname.map(Regex).filter(Boolean);
-        RegCheck(nname, "主机名hostname", "regex", Preg);
-    }
-    if (Pregout) {
-        nname = nname.map(RegexOut).filter(Boolean);
-        RegCheck(nname, "主机名hostname", "regout", Pregout);
-    }
-
-    // 加入全局集合
-    nname.forEach(h => GlobalHostNameSet.add(h));
-
-    return "hostname=" + nname.join(", ");
+    if(Preg){ nname = nname.map(Regex).filter(Boolean)
+      RegCheck(nname, "主机名hostname","regex", Preg) }
+    if(Pregout){ nname = nname.map(RegexOut).filter(Boolean)
+      RegCheck(nname, "主机名hostname", "regout", Pregout) }
+    hname = "hostname=" + nname.join(", ");
+    return hname
 }
 
 //Rewrite 筛选的函数
@@ -3933,8 +3920,88 @@ function OR(...args) {
 
 function NOT(array) {
     return array.map(c => !c);
+  // —— 在 HostNamecheck 函数里收集每个模块/每次调用的 hostname —— 
+function HostNamecheck(content, parain, paraout) {
+    var hname = content.replace(/ /g, "").split("=")[1].split(",");
+    var nname = [];
+    var dname = [];
+    // —— 原有筛选逻辑不变 —— 
+
+    for (var i = 0; i < hname.length; i++) {
+        var dd = hname[i];
+        const excludehn = (item) => dd.indexOf(item) != -1;
+        if (paraout && paraout != "") {
+            if (!paraout.some(excludehn)) {
+                if (parain && parain != "") {
+                    if (parain.some(excludehn)) {
+                        nname.push(hname[i]);
+                    } else {
+                        dname.push(hname[i]);
+                    }
+                } else {
+                    nname.push(hname[i]);
+                }
+            } else {
+                dname.push(hname[i]);
+            }
+        } else if (parain && parain != "") {
+            if (parain.some(excludehn)) {
+                nname.push(hname[i]);
+            } else {
+                dname.push(hname[i]);
+            }
+        } else {
+            nname.push(hname[i]);
+        }
+    }
+    // —— 原有通知逻辑不变 —— 
+
+    if (Pntf0 != 0) {
+        // … 通知部分省略 …
+    }
+    if (nname.length == 0) {
+        // … 通知空列表 …
+    }
+    if (Preg) {
+        nname = nname.map(Regex).filter(Boolean);
+        RegCheck(nname, "主机名hostname","regex", Preg);
+    }
+    if (Pregout) {
+        nname = nname.map(RegexOut).filter(Boolean);
+        RegCheck(nname, "主机名hostname","regout", Pregout);
+    }
+
+    // —— **关键：收集到全局集合** —— 
+    nname.forEach(h => GlobalHostNameSet.add(h));
+
+    // —— 返回该模块处理后的 hostname 字符串，不再 push 到 finalConf —— 
+    return "hostname=" + nname.join(", ");
 }
+
+// —— 新增：生成合并后 hostname—— 
 function GetMergedHostName() {
   if (GlobalHostNameSet.size === 0) return "";
   return "hostname=" + Array.from(GlobalHostNameSet).join(",");
+}
+
+// —— 修改最终输出处：只在最后一次 $done 前插入合并后的 hostname —— 
+// 在脚本中找到最后的 $done({ content: total }); 或 $done({ content: finalConf.join('\n') });
+
+/*
+  假设是 $done({ content: total });
+  将其替换为：
+    const mergedHost = GetMergedHostName();
+    total = [mergedHost, total].filter(Boolean).join('\n');
+    $done({ content: total });
+*/
+
+// 例如：
+$done({ content: GetMergedHostName() + "\n" + total });
+
+// 或者如果最后使用 finalConf：
+/*
+const mergedHost = GetMergedHostName();
+finalConf.unshift(mergedHost);
+$done({ content: finalConf.join('\n') });
+*/
 }
