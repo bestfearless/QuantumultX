@@ -1,3 +1,5 @@
+let GlobalHostNameSet = new Set();
+
 /** 
 ☑️ 资源解析器 ©𝐒𝐡𝐚𝐰𝐧  ⟦2025-05-16 10:58⟧
 ----------------------------------------------------------
@@ -344,6 +346,8 @@ function Parser() {
   } else {
     total=""
   }
+  finalConf.push(GetMergedHostName());
+  finalConf.push(GetMergedHostName());
     $done({ content: total });
 }
 
@@ -1252,69 +1256,54 @@ function Rewrite_Filter(subs, Pin, Pout,Preg,Pregout) {
     return Nlist
 }
 
-// --- 新增的辅助函数，用于合并 Quantumult X 配置中的多行 hostname ---
-/**
- * 合并 Quantumult X 配置文本中的所有 'hostname = ...' 行。
- * 会将所有收集到的 hostname 去重后，合并成一行 'hostname = host1, host2, ...'，
- * 并放置在返回配置文本的开头。其他所有非 'hostname = ...' 的行会保持其原始相对顺序。
- *
- * @param {string} configText 原始配置文本。
- * @returns {string} 处理后的配置文本。
- */
-function _qxHostnameGlobalMerger(configText) {
-    // 确保输入是字符串类型，如果不是（例如，可能已经是解析后的对象），则直接返回
-    if (typeof configText !== 'string') {
-        return configText;
-    }
-
-    const lines = configText.split(/\r\n|\r|\n/); // 将配置文本按行分割
-    const collectedHostnames = []; // 用于存储所有收集到的 hostname
-    const otherConfigLines = [];   // 用于存储所有非 'hostname = ...' 的行
-
-    // 正则表达式，用于匹配 'hostname = ' 开头的行，忽略前导空格和 'hostname' 的大小写
-    const hostnamePattern = /^\s*hostname\s*=/i;
-
-    for (const line of lines) {
-        const trimmedLine = line.trim(); //去除行首尾的空白字符
-
-        if (hostnamePattern.test(trimmedLine)) { // 如果当前行是 hostname 定义行
-            //尝试提取 '=' 后面的主机名部分
-            const parts = trimmedLine.split('=', 2); // 最多分割成两部分
-            if (parts.length > 1) {
-                const hostnamesString = parts[1].trim(); // 获取 '=' 后面的字符串并去除空白
-                if (hostnamesString) { // 如果主机名字符串不为空
-                    hostnamesString.split(',') // 按逗号分割多个主机名
-                        .map(h => h.trim())    // 去除每个主机名周围的空白
-                        .filter(h => h)        // 过滤掉空的主机名 (例如 "host1,,host2" 中的空隙)
-                        .forEach(h => collectedHostnames.push(h)); // 添加到收集列表中
-                } else {
-                    // 如果是 "hostname =" 后面为空的情况，作为普通行保留
-                    otherConfigLines.push(line);
-                }
-            } else {
-                // 如果行以 "hostname" 开头但没有 "=", 作为普通行保留 (理论上hostnamePattern已匹配则此分支较少进入)
-                otherConfigLines.push(line);
-            }
+// 主机名处理
+function HostNamecheck(content, parain, paraout) {
+    var hname = content.replace(/ /g, "").split("=")[1].split(",");
+    var nname = [];
+    var dname = []; //删除项
+    for (var i = 0; i < hname.length; i++) {
+        dd = hname[i]
+        const excludehn = (item) => dd.indexOf(item) != -1;
+        if (paraout && paraout != "") { //存在 out 参数时
+            if (!paraout.some(excludehn)) { //out 未命中🎯️
+                if (parain && parain != "") {
+                    if (parain.some(excludehn)) { //Pin 命中🎯️
+                        nname.push(hname[i])
+                    } else {
+                        dname.push(hname[i])
+                    } //Pin 未命中🎯️的记录
+                } else { nname.push(hname[i]) } //无in 参数    
+            } else { dname.push(hname[i]) } //out 参数命中
+        } else if (parain && parain != "") { //不存在 out，但有 in 参数时
+            if (parain.some(excludehn)) { //Pin 命中🎯️
+                nname.push(hname[i])
+            } else { dname.push(hname[i]) }
         } else {
-            // 如果不是 hostname 定义行，则将其加入到其他配置行的列表中
-            otherConfigLines.push(line);
+            nname.push(hname[i])
+        }
+    } //for j
+    if (Pntf0 != 0) {
+        if (paraout || parain) {
+            var noname = dname.length <= 10 ? emojino[dname.length] : dname.length
+            var no1name = nname.length <= 10 ? emojino[nname.length] : nname.length
+            if (parain && no1name != " 0️⃣ ") {
+                $notify("🤖 " + "重写引用  ➟ " + "⟦" + subtag + "⟧", "⛔️ 筛选参数: " + pfihn + pfohn, "☠️ 主机名 hostname 中已保留以下" + no1name + "个匹配项:" + "\n ⨷ " + nname.join(","), rwhost_link)
+            } else if (dname.length > 0) {
+                $notify("🤖 " + "重写引用  ➟ " + "⟦" + subtag + "⟧", "⛔️ 筛选参数: " + pfihn + pfohn, "☠️ 主机名 hostname 中已删除以下" + noname + "个匹配项:" + "\n ⨷ " + dname.join(","), rwhost_link)
+            }
         }
     }
-
-    let finalLines = []; // 用于构建最终输出的行数组
-    if (collectedHostnames.length > 0) {
-        // 使用 Set 对收集到的主机名进行去重，并保持首次出现的顺序（Set的特性）
-        const uniqueHostnames = [...new Set(collectedHostnames)];
-        // 构建合并后的 hostname 行
-        finalLines.push(`hostname = ${uniqueHostnames.join(', ')}`);
+    if (nname.length == 0) {
+        $notify("🤖 " + "重写引用  ➟ " + "⟦" + subtag + "⟧", "⛔️ 筛选参数: " + pfihn + pfohn, "⚠️ 主机名 hostname 中剩余 0️⃣ 项, 请检查参数及原始链接", nan_link)
     }
-
-    // 将所有其他配置行追加到最终的行数组中
-    finalLines.push(...otherConfigLines);
-    // 将所有行用换行符连接成最终的配置文本
-    return finalLines.join('\n');
+    if(Preg){ nname = nname.map(Regex).filter(Boolean)
+      RegCheck(nname, "主机名hostname","regex", Preg) }
+    if(Pregout){ nname = nname.map(RegexOut).filter(Boolean)
+      RegCheck(nname, "主机名hostname", "regout", Pregout) }
+    hname = "hostname=" + nname.join(", ");
+    nname.forEach(h => GlobalHostNameSet.add(h));
+    return hname
 }
-// --- Hostname 合并辅助函数结束 ---
 
 //Rewrite 筛选的函数
 function Rcheck(content, param) {
@@ -3934,4 +3923,9 @@ function OR(...args) {
 
 function NOT(array) {
     return array.map(c => !c);
+}
+
+function GetMergedHostName() {
+  if (GlobalHostNameSet.size === 0) return "";
+//   return "hostname=" + Array.from(GlobalHostNameSet).join(",");  <-- 被注释以避免多次输出 hostname
 }
