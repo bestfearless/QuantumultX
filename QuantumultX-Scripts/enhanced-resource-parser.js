@@ -1316,6 +1316,21 @@ function _qxHostnameGlobalMerger(configText) {
 }
 // --- Hostname 合并辅助函数结束 ---
 
+//Rewrite 筛选的函数
+function Rcheck(content, param) {
+    name = content.toUpperCase()
+    if (param) {
+        var flag = 0; //没命中
+        const checkpara = (item) => name.indexOf(item.toUpperCase()) != -1;
+        if (param.some(checkpara)) {
+            flag = 1 //命中
+        }
+        return flag
+    } else { //if param
+        return 2
+    } //无参数
+}
+
 //分流规则转换及过滤(in&out)，可用于 surge 及 quanx 的 rule-list
 function Rule_Handle(subs, Pout, Pin) {
     cnt = subs //.split("\n");
