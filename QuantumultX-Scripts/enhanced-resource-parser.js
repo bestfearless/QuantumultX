@@ -1252,26 +1252,36 @@ function Rewrite_Filter(subs, Pin, Pout,Preg,Pregout) {
     return Nlist
 }
 
-// 主机名处理（仅合并多行，去除过滤逻辑）
+// 主机名处理（多行合并终极解决方案）
 function HostNamecheck(content) {
-    // 1. 合并所有 hostname 行（兼容 hostname =、HostName= 等格式）
+    // 1. 严格匹配所有 hostname 行（兼容全角空格等异常情况）
     const hostLines = content.split(/\r?\n/)
-        .map(line => line.trim())
-        .filter(line => /^hostname\s*=/i.test(line));
+        .map(line => line.replace(/[\u3000]/g, "").trim()) // 清除全角空格
+        .filter(line => /^hostname[ \t]*=/i.test(line));    // 允许空格或制表符
 
-    // 2. 提取所有主机名并去重
-    let allHnames = [];
+    // 2. 提取主机名（强化容错逻辑）
+    const allHnames = [];
     for (const line of hostLines) {
-        const [, value] = line.split(/hostname\s*=\s*/i);
-        if (value) {
-            const values = value.split(',').map(v => v.trim()).filter(Boolean);
+        try {
+            // 增强键值分割逻辑
+            const [_, valuePart] = line.match(/^hostname[ \t]*=[ \t]*(.*)/i) || [];
+            if (!valuePart) continue;
+
+            // 处理转义字符和特殊符号
+            const safeValue = valuePart.replace(/\\/g, "");
+            const values = safeValue.split(',')
+                .map(v => v.trim())
+                .filter(v => v !== "");
+
             allHnames.push(...values);
+        } catch (e) {
+            console.log(`解析行失败: ${line}`, e);
         }
     }
-    allHnames = [...new Set(allHnames)]; // 去重
 
-    // 3. 直接返回合并后的 hostname（跳过所有过滤和通知）
-    return allHnames.length > 0 ? `hostname = ${allHnames.join(", ")}` : "";
+    // 3. 去重并格式化输出
+    const uniqueNames = [...new Set(allHnames)];
+    return uniqueNames.length > 0 ? `hostname = ${uniqueNames.join(", ")}` : "";
 }
 
 //Rewrite 筛选的函数
