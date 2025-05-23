@@ -106,6 +106,7 @@ resource_parser_url = https://raw.githubusercontent.com/KOP-XIAO/QuantumultX/mas
 
 ------------------------------
 */
+let GlobalHostNameSet = new Set();
 
 //beginning 解析器正常使用，調試註釋此部分
 
@@ -1251,82 +1252,70 @@ function Rewrite_Filter(subs, Pin, Pout,Preg,Pregout) {
     //$notify("final","Content",Nlist)
     return Nlist
 }
-
-// 主机名处理
 function HostNamecheck(content, parain, paraout) {
-    // Extract hostnames from the content
-    const hname = content.replace(/ /g, "").split("=")[1].split(",");
-    const nname = []; // Array to hold retained hostnames
-    const dname = []; // Array to hold discarded hostnames
+    var hname = content.replace(/ /g, "").split("=")[1].split(",");
+    var nname = [];
+    var dname = [];
 
-    hname.forEach(dd => {
-        const excludehn = (item) => dd.indexOf(item) !== -1;
-        
-        // Check if 'paraout' exists and is non-empty
-        if (paraout && paraout.length > 0) {
-            if (!paraout.some(excludehn)) { // If 'paraout' doesn't match
-                if (parain && parain.length > 0) {
-                    if (parain.some(excludehn)) { // If 'parain' matches
-                        nname.push(dd);
+    for (var i = 0; i < hname.length; i++) {
+        var dd = hname[i];
+        const excludehn = (item) => dd.indexOf(item) != -1;
+        if (paraout && paraout != "") {
+            if (!paraout.some(excludehn)) {
+                if (parain && parain != "") {
+                    if (parain.some(excludehn)) {
+                        nname.push(hname[i]);
                     } else {
-                        dname.push(dd); // 'parain' doesn't match
+                        dname.push(hname[i]);
                     }
                 } else {
-                    nname.push(dd); // No 'parain' provided
+                    nname.push(hname[i]);
                 }
             } else {
-                dname.push(dd); // 'paraout' matches, discard hostname
+                dname.push(hname[i]);
             }
-        } else if (parain && parain.length > 0) { // No 'paraout', but 'parain' exists
-            if (parain.some(excludehn)) { // If 'parain' matches
-                nname.push(dd);
+        } else if (parain && parain != "") {
+            if (parain.some(excludehn)) {
+                nname.push(hname[i]);
             } else {
-                dname.push(dd);
+                dname.push(hname[i]);
             }
         } else {
-            nname.push(dd); // No filtering, add all hostnames
-        }
-    });
-
-    // Debugging: Log the arrays to understand their contents
-    console.log("Original Hostnames:", hname);
-    console.log("Retained Hostnames:", nname);
-    console.log("Discarded Hostnames:", dname);
-
-    if (Pntf0 !== 0) {
-        const noname = dname.length <= 10 ? emojino[dname.length] : dname.length;
-        const no1name = nname.length <= 10 ? emojino[nname.length] : nname.length;
-        if (parain && no1name !== " 0️⃣ ") {
-            $notify("🤖 重写引用 ➟ ⟦" + subtag + "⟧", 
-                    "⛔️ 筛选参数: " + pfihn + pfohn, 
-                    "☠️ 主机名 hostname 中已保留以下" + no1name + "个匹配项:\n ⨷ " + nname.join(","), 
-                    rwhost_link);
-        } else if (dname.length > 0) {
-            $notify("🤖 重写引用 ➟ ⟦" + subtag + "⟧", 
-                    "⛔️ 筛选参数: " + pfihn + pfohn, 
-                    "☠️ 主机名 hostname 中已删除以下" + noname + "个匹配项:\n ⨷ " + dname.join(","), 
-                    rwhost_link);
+            nname.push(hname[i]);
         }
     }
 
-    if (nname.length === 0) {
-        $notify("🤖 重写引用 ➟ ⟦" + subtag + "⟧", 
-                "⛔️ 筛选参数: " + pfihn + pfohn, 
-                "⚠️ 主机名 hostname 中剩余 0️⃣ 项, 请检查参数及原始链接", 
-                nan_link);
+    if (Pntf0 != 0) {
+        if (paraout || parain) {
+            var noname = dname.length <= 10 ? emojino[dname.length] : dname.length;
+            var no1name = nname.length <= 10 ? emojino[nname.length] : nname.length;
+            if (parain && no1name != " 0️⃣ ") {
+                $notify("🤖 " + "重写引用 ➟ ⟦" + subtag + "⟧", "⛔️ 筛选参数: " + pfihn + pfohn, "☠️ hostname 保留" + no1name + "项:\n⨷ " + nname.join(","), rwhost_link);
+            } else if (dname.length > 0) {
+                $notify("🤖 " + "重写引用 ➟ ⟦" + subtag + "⟧", "⛔️ 筛选参数: " + pfihn + pfohn, "☠️ hostname 删除" + noname + "项:\n⨷ " + dname.join(","), rwhost_link);
+            }
+        }
     }
 
-    if (Preg) { 
+    if (nname.length == 0) {
+        $notify("🤖 " + "重写引用 ➟ ⟦" + subtag + "⟧", "⛔️ 筛选参数: " + pfihn + pfohn, "⚠️ hostname 剩余 0️⃣ 项，请检查参数", nan_link);
+    }
+
+    if (Preg) {
         nname = nname.map(Regex).filter(Boolean);
         RegCheck(nname, "主机名hostname", "regex", Preg);
     }
-    if (Pregout) { 
+    if (Pregout) {
         nname = nname.map(RegexOut).filter(Boolean);
         RegCheck(nname, "主机名hostname", "regout", Pregout);
     }
 
+    // 加入全局集合
+    nname.forEach(h => GlobalHostNameSet.add(h));
+
     return "hostname=" + nname.join(", ");
 }
+
 //Rewrite 筛选的函数
 function Rcheck(content, param) {
     name = content.toUpperCase()
@@ -3945,4 +3934,8 @@ function OR(...args) {
 
 function NOT(array) {
     return array.map(c => !c);
+}
+function GetMergedHostName() {
+    if (GlobalHostNameSet.size === 0) return "";
+    return "hostname=" + Array.from(GlobalHostNameSet).join(",");
 }
