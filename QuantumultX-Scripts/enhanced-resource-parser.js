@@ -1252,19 +1252,19 @@ function Rewrite_Filter(subs, Pin, Pout,Preg,Pregout) {
     return Nlist
 }
 
-// 主机名处理（支持多行合并）
+// 主机名处理（支持多行合并）- 修复版
 function HostNamecheck(content, parain, paraout) {
-    // 1. 合并所有 hostname= 开头的行（兼容空格和大小写）
+    // 1. 合并所有 hostname 行（兼容 hostname =、HostName= 等格式）
     const hostLines = content.split(/\r?\n/)
         .map(line => line.trim())
-        .filter(line => line.toLowerCase().startsWith("hostname=")); // 兼容 HostName= 等写法
+        .filter(line => /^hostname\s*=/i.test(line)); // 修复点：使用正则匹配
 
     // 2. 提取所有主机名并去重
     let allHnames = [];
     for (const line of hostLines) {
-        const parts = line.split(/hostname\s*=\s*/i); // 分割键值（忽略大小写和空格）
-        if (parts.length >= 2) {
-            const values = parts[1].split(',').map(v => v.trim()).filter(Boolean);
+        const [, value] = line.split(/hostname\s*=\s*/i); // 分割键值
+        if (value) {
+            const values = value.split(',').map(v => v.trim()).filter(Boolean);
             allHnames.push(...values);
         }
     }
