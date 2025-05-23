@@ -1252,52 +1252,31 @@ function Rewrite_Filter(subs, Pin, Pout,Preg,Pregout) {
     return Nlist
 }
 
-// 主机名处理（多行合并终极解决方案）
-function HostNamecheck(content) {
-    // 1. 严格匹配所有 hostname 行（兼容全角空格等异常情况）
-    const hostLines = content.split(/\r?\n/)
-        .map(line => line.replace(/[\u3000]/g, "").trim()) // 清除全角空格
-        .filter(line => /^hostname[ \t]*=/i.test(line));    // 允许空格或制表符
+// 合并文件中的所有hostname
+function mergeHostnames(fileContent) {
+    // Split the content by lines
+    const lines = fileContent.split(/\r?\n/);
+    const hostnamesSet = new Set();
 
-    // 2. 提取主机名（强化容错逻辑）
-    const allHnames = [];
-    for (const line of hostLines) {
-        try {
-            // 增强键值分割逻辑
-            const [_, valuePart] = line.match(/^hostname[ \t]*=[ \t]*(.*)/i) || [];
-            if (!valuePart) continue;
+    // Regular expression to match lines with hostnames
+    const hostnameRegex = /^hostname\s*=\s*(.+)$/;
 
-            // 处理转义字符和特殊符号
-            const safeValue = valuePart.replace(/\\/g, "");
-            const values = safeValue.split(',')
-                .map(v => v.trim())
-                .filter(v => v !== "");
-
-            allHnames.push(...values);
-        } catch (e) {
-            console.log(`解析行失败: ${line}`, e);
+    // Process each line
+    lines.forEach(line => {
+        const match = line.match(hostnameRegex);
+        if (match) {
+            // Split multiple hostnames by comma and trim spaces
+            const hostnames = match[1].split(',').map(h => h.trim());
+            hostnames.forEach(hostname => hostnamesSet.add(hostname));
         }
-    }
+    });
 
-    // 3. 去重并格式化输出
-    const uniqueNames = [...new Set(allHnames)];
-    return uniqueNames.length > 0 ? `hostname = ${uniqueNames.join(", ")}` : "";
+    // Merge hostnames into a single string
+    const mergedHostnames = Array.from(hostnamesSet).join(', ');
+
+    return "hostname=" + mergedHostnames;
 }
 
-//Rewrite 筛选的函数
-function Rcheck(content, param) {
-    name = content.toUpperCase()
-    if (param) {
-        var flag = 0; //没命中
-        const checkpara = (item) => name.indexOf(item.toUpperCase()) != -1;
-        if (param.some(checkpara)) {
-            flag = 1 //命中
-        }
-        return flag
-    } else { //if param
-        return 2
-    } //无参数
-}
 
 //分流规则转换及过滤(in&out)，可用于 surge 及 quanx 的 rule-list
 function Rule_Handle(subs, Pout, Pin) {
