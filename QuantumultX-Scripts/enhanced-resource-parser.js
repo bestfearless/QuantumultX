@@ -1252,17 +1252,17 @@ function Rewrite_Filter(subs, Pin, Pout,Preg,Pregout) {
     return Nlist
 }
 
-// 主机名处理（支持多行合并）- 修复版
-function HostNamecheck(content, parain, paraout) {
+// 主机名处理（仅合并多行，去除过滤逻辑）
+function HostNamecheck(content) {
     // 1. 合并所有 hostname 行（兼容 hostname =、HostName= 等格式）
     const hostLines = content.split(/\r?\n/)
         .map(line => line.trim())
-        .filter(line => /^hostname\s*=/i.test(line)); // 修复点：使用正则匹配
+        .filter(line => /^hostname\s*=/i.test(line));
 
     // 2. 提取所有主机名并去重
     let allHnames = [];
     for (const line of hostLines) {
-        const [, value] = line.split(/hostname\s*=\s*/i); // 分割键值
+        const [, value] = line.split(/hostname\s*=\s*/i);
         if (value) {
             const values = value.split(',').map(v => v.trim()).filter(Boolean);
             allHnames.push(...values);
@@ -1270,41 +1270,8 @@ function HostNamecheck(content, parain, paraout) {
     }
     allHnames = [...new Set(allHnames)]; // 去重
 
-    // 3. 执行黑白名单过滤（原逻辑）
-    let nname = [], dname = [];
-    for (const host of allHnames) {
-        const isExcluded = paraout?.some(item => host.includes(item));
-        const isIncluded = parain?.length ? parain.some(item => host.includes(item)) : true;
-
-        if (isExcluded) {
-            dname.push(host);
-        } else if (isIncluded) {
-            nname.push(host);
-        } else {
-            dname.push(host);
-        }
-    } //for j
-    if (Pntf0 != 0) {
-        if (paraout || parain) {
-            var noname = dname.length <= 10 ? emojino[dname.length] : dname.length
-            var no1name = nname.length <= 10 ? emojino[nname.length] : nname.length
-            if (parain && no1name != " 0️⃣ ") {
-                $notify("🤖 " + "重写引用  ➟ " + "⟦" + subtag + "⟧", "⛔️ 筛选参数: " + pfihn + pfohn, "☠️ 主机名 hostname 中已保留以下" + no1name + "个匹配项:" + "\n ⨷ " + nname.join(","), rwhost_link)
-            } else if (dname.length > 0) {
-                $notify("🤖 " + "重写引用  ➟ " + "⟦" + subtag + "⟧", "⛔️ 筛选参数: " + pfihn + pfohn, "☠️ 主机名 hostname 中已删除以下" + noname + "个匹配项:" + "\n ⨷ " + dname.join(","), rwhost_link)
-            }
-        }
-    }
-    if (nname.length == 0) {
-        $notify("🤖 " + "重写引用  ➟ " + "⟦" + subtag + "⟧", "⛔️ 筛选参数: " + pfihn + pfohn, "⚠️ 主机名 hostname 中剩余 0️⃣ 项, 请检查参数及原始链接", nan_link)
-    }
-    if(Preg){ nname = nname.map(Regex).filter(Boolean)
-      RegCheck(nname, "主机名hostname","regex", Preg) }
-    if(Pregout){ nname = nname.map(RegexOut).filter(Boolean)
-      RegCheck(nname, "主机名hostname", "regout", Pregout) }
-    hname = "hostname=" + nname.join(", ");
-    // 5. 返回合并后的 hostname（如果为空则不输出）
-    return nname.length > 0 ? `hostname = ${nname.join(", ")}` : "";
+    // 3. 直接返回合并后的 hostname（跳过所有过滤和通知）
+    return allHnames.length > 0 ? `hostname = ${allHnames.join(", ")}` : "";
 }
 
 //Rewrite 筛选的函数
