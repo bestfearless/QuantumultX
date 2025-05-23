@@ -5,3 +5,19 @@ hostname = ad.life.360.cn
 # > 36kr
 hostname = gateway.36kr.com
 ^https?:\/\/gateway\.36kr\.com\/api\/adx\/ad\/show url reject
+
+# 多点
+hostname=download.dmallcdn.com
+^https?:\/\/download\.dmallcdn\.com\/.*\.jpg$ url reject-200
+
+# 京东
+hostname= m.360buyimg.com
+^https?:\/\/m\.360buyimg\.com\/mobilecms\/s\d+x\d+_jfs\/.*\.jpg$ url reject-200
+
+# 小鹏
+hostname = xps11.xiaopeng.com
+^https?:\/\/xps11\.xiaopeng\.com\/app\/resource\/pic url reject-200
+
+# 12123
+hostname=static.122.gov.cn
+^https?:\/\/static\.122\.gov\.cn\/.*\.jpg url reject-200
