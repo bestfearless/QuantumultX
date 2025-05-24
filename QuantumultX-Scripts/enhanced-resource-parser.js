@@ -1,37 +1,40 @@
-// ====== 插入到文件顶部（替换所有之前添加的代码） ======
-var __hostnames = new Set();
+// ====== 替换文件全部内容 ======
+// 注意：此代码需完全覆盖原解析器内容
+var hostnames = new Set();
 
-// 劫持配置输入内容（绕过原解析器逻辑）
-var __originalContent = content;
-content = __originalContent.split("\n").map(line => {
-  const trimmed = line.trim();
-  // 捕获并删除所有 hostname 行
+// 预处理：捕获并删除所有 hostname 行
+var modifiedContent = content.split("\n").map(line => {
+  var trimmed = line.trim();
   if (/^\s*hostname\s*=/i.test(trimmed)) {
-    const domains = trimmed.split(/hostname\s*=\s*/i)[1] || "";
+    var domains = trimmed.split(/hostname\s*=\s*/i)[1] || "";
     domains.split(",").forEach(d => {
-      const domain = d.trim();
-      if (domain) __hostnames.add(domain);
+      var domain = d.trim();
+      if (domain) hostnames.add(domain);
     });
-    return "";
+    return ""; // 删除原行
   }
   return line;
 }).join("\n");
 
 // 生成原始配置
-var __originalResult = parse(content);
+var result = parse(modifiedContent);
 
-// 合并 hostname 到末尾（严格字符串操作）
-var finalResult = __originalResult;
-if (__hostnames.size > 0) {
-  finalResult = (typeof __originalResult === "string" ? __originalResult : "") 
-    + "\nhostname = " + Array.from(__hostnames).join(", ");
+// 合并 hostname 到末尾（强制字符串类型）
+if (hostnames.size > 0) {
+  var hostnameLine = "\nhostname = " + Array.from(hostnames).join(", ");
+  if (typeof result === "string") {
+    result += hostnameLine;
+  } else {
+    result = hostnameLine; // 容错处理
+  }
 }
 
 // 返回最终结果（确保字符串类型）
-if (typeof finalResult !== "string") {
-  finalResult = JSON.stringify(finalResult);
+if (typeof result !== "string") {
+  result = "";
 }
-return finalResult;
+result; // 隐式返回（避免显式 return 导致的语法错误）
+
 //beginning 解析器正常使用，調試註釋此部分
 
 let [link0, content0, subinfo] = [$resource.link, $resource.content, $resource.info]
