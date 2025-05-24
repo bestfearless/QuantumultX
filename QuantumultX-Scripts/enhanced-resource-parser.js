@@ -1,4 +1,3 @@
-let GlobalHostNameSet = new Set();
 /** 
 ☑️ 资源解析器 ©𝐒𝐡𝐚𝐰𝐧  ⟦2025-05-16 10:58⟧
 ----------------------------------------------------------
@@ -109,6 +108,7 @@ resource_parser_url = https://raw.githubusercontent.com/KOP-XIAO/QuantumultX/mas
 */
 //beginning 解析器正常使用，調試註釋此部分
 
+let GlobalHostNameSet = new Set();
 let [link0, content0, subinfo] = [$resource.link, $resource.content, $resource.info]
 let version = typeof $environment != "undefined" ? Number($environment.version.split("build")[1]): 0 // 版本号
 let Perror = 0 //错误类型
