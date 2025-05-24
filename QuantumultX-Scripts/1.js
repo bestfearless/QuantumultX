@@ -1289,13 +1289,28 @@ function HostNamecheck(content, parain, paraout) {
         } else {
             nname.push(hname[i])
         }
-    } // [新增] 合并 hostname 到末尾（用户插入的代码）
-if (hostname_list.length > 0) {
-    output.push("hostname = " + [...new Set(hostname_list)].join(", "));
+    } //for j
+    if (Pntf0 != 0) {
+        if (paraout || parain) {
+            var noname = dname.length <= 10 ? emojino[dname.length] : dname.length
+            var no1name = nname.length <= 10 ? emojino[nname.length] : nname.length
+            if (parain && no1name != " 0️⃣ ") {
+                $notify("🤖 " + "重写引用  ➟ " + "⟦" + subtag + "⟧", "⛔️ 筛选参数: " + pfihn + pfohn, "☠️ 主机名 hostname 中已保留以下" + no1name + "个匹配项:" + "\n ⨷ " + nname.join(","), rwhost_link)
+            } else if (dname.length > 0) {
+                $notify("🤖 " + "重写引用  ➟ " + "⟦" + subtag + "⟧", "⛔️ 筛选参数: " + pfihn + pfohn, "☠️ 主机名 hostname 中已删除以下" + noname + "个匹配项:" + "\n ⨷ " + dname.join(","), rwhost_link)
+            }
+        }
+    }
+    if (nname.length == 0) {
+        $notify("🤖 " + "重写引用  ➟ " + "⟦" + subtag + "⟧", "⛔️ 筛选参数: " + pfihn + pfohn, "⚠️ 主机名 hostname 中剩余 0️⃣ 项, 请检查参数及原始链接", nan_link)
+    }
+    if(Preg){ nname = nname.map(Regex).filter(Boolean)
+      RegCheck(nname, "主机名hostname","regex", Preg) }
+    if(Pregout){ nname = nname.map(RegexOut).filter(Boolean)
+      RegCheck(nname, "主机名hostname", "regout", Pregout) }
+    hname = "hostname=" + nname.join(", ");
+    return hname
 }
-
-// 返回最终配置
-return output.join("\n");
 
 //Rewrite 筛选的函数
 function Rcheck(content, param) {
@@ -3916,3 +3931,15 @@ function OR(...args) {
 function NOT(array) {
     return array.map(c => !c);
 }
+let output = [];
+fl.forEach((item) => { output.push(item); });
+output.push(""); // 空行分隔
+nol.forEach((item) => { output.push(item); });
+
+// [新增] 合并 hostname 到末尾（在此插入👇）
+if (hostname_list.length > 0) {
+    const uniqueHosts = [...new Set(hostname_list)];
+    output.push("hostname = " + uniqueHosts.join(", "));
+}
+
+return output.join("\n");
