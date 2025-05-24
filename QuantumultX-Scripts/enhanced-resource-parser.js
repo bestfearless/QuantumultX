@@ -1,31 +1,33 @@
-// ====== 插入到文件顶部（无需其他修改） ======
-var __hostnames = [];
-var __originalParse = typeof parse === "function" ? parse : function() {};
+// ====== 插入到文件顶部 ======
+var __mergedHostname = new Set();
 
-// 劫持解析流程
-parse = function(content) {
-  // 预处理：收集所有 hostname
-  content.split("\n").forEach(line => {
-    var l = line.trim();
-    if (/^hostname\s*=/i.test(l)) {
-      var domains = l.split(/hostname\s*=\s*/i)[1] || "";
-      domains.split(",").forEach(d => {
-        var domain = d.trim();
-        if (domain) __hostnames.push(domain);
-      });
-    }
-  });
+// 劫持原解析器的行处理逻辑
+var __originalLineHandler = typeof handleLine === "function" ? handleLine : function() {};
+handleLine = function(line) {
+  var l = line.trim();
   
-  // 生成原始配置
-  var originalOutput = __originalParse(content);
-  
-  // 合并 hostname 到末尾
-  if (__hostnames.length > 0) {
-    var uniqueHosts = [...new Set(__hostnames)];
-    originalOutput += "\nhostname = " + uniqueHosts.join(", ");
+  // 捕获所有 hostname 行并删除原行
+  if (/^\s*hostname\s*=/i.test(l)) {
+    var domains = l.split(/hostname\s*=\s*/i)[1] || "";
+    domains.split(",").forEach(d => {
+      var domain = d.trim();
+      if (domain) __mergedHostname.add(domain);
+    });
+    return ""; // 禁止原行输出
   }
   
-  return originalOutput;
+  return __originalLineHandler(line);
+};
+
+// 劫持最终输出
+var __originalFinalize = typeof finalize === "function" ? finalize : function() {};
+finalize = function(output) {
+  var result = __originalFinalize(output);
+  // 插入合并行到末尾
+  if (__mergedHostname.size > 0) {
+    result += "\nhostname = " + Array.from(__mergedHostname).join(", ");
+  }
+  return result;
 };
 // ====== 代码结束 ======
 /** 
