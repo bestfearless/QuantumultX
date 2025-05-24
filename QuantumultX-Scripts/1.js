@@ -1,3 +1,20 @@
+// 合并 hostname 到一个变量中的代码
+
+let mergedHostnames = '';
+
+const hostnamesList = [
+    'ad.life.360.cn',
+    'gateway.36kr.com',
+    'download.dmallcdn.com',
+    'm.360buyimg.com',
+    'xps11.xiaopeng.com',
+    'static.122.gov.cn'
+];
+
+// 使用 join() 方法将 hostname 合并到一个字符串中，用逗号分隔
+mergedHostnames = `hostname = ${hostnamesList.join(', ')}`;
+
+console.log(mergedHostnames);
 
 //beginning 解析器正常使用，調試註釋此部分
 
