@@ -1,3 +1,30 @@
+// ====== Hostname 自动合并模块（用户新增） ======
+var __hostnames = new Set(); // 全局存储去重后的 hostname
+
+// 劫持原解析流程 - 预处理所有行
+var __originalLines = lines; // 备份原始配置行
+lines = __originalLines.map(line => {
+  const trimmed = line.trim();
+  // 捕获 hostname 行并收集域名
+  if (trimmed.toLowerCase().startsWith("hostname")) {
+    const domains = trimmed.split(/hostname\s*=\s*/i)[1] || "";
+    domains.split(",").forEach(d => {
+      const domain = d.trim();
+      if (domain) __hostnames.add(domain);
+    });
+    return ""; // 删除原始行
+  }
+  return line; // 其他行保持不变
+});
+
+// 劫持最终输出 - 插入合并后的 hostname
+var __originalOutput = output; // 备份原始输出
+output = [...__originalOutput]; // 复制原始输出
+if (__hostnames.size > 0) {
+  output.push(""); // 空行分隔
+  output.push("hostname = " + Array.from(__hostnames).join(", ")); // 插入合并行到末尾
+}
+// ====== 模块结束 ======
 /** 
 ☑️ 资源解析器 ©𝐒𝐡𝐚𝐰𝐧  ⟦2025-05-16 10:58⟧
 ----------------------------------------------------------
@@ -138,7 +165,6 @@ var para1 = para.slice(para.indexOf("#") + 1).replace(/\$type/g,"node_type_para_
 var mark0 = para.indexOf("#") != -1 ? true : false; //是否有參數需要解析
 var Pinfo = mark0 && para1.indexOf("info=") != -1 ? para1.split("info=")[1].split("&")[0] : 0;
 var ntf_flow = 0;
-var hostname_list = []; // 全局存储 hostname
 //常用量
 const Base64 = new Base64Code();
 const escapeRegExp = str => str.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&'); //处理特殊符号以便正则匹配使用
@@ -1205,17 +1231,7 @@ function Rewrite_Filter(subs, Pin, Pout,Preg,Pregout) {
             const notecheck = (item) => subi.indexOf(item) == 0
             if (noteK.some(notecheck)) { // 注释项跳过 
                 continue;
-            } 
-                // [新增] 捕获 hostname 行
-    if (l.toLowerCase().startsWith("hostname")) {
-        const domains = l.split(/hostname\s*=\s*/i)[1] || "";
-        domains.split(",").forEach(d => {
-            const domain = d.trim();
-            if (domain) hostname_list.push(domain);
-        });
-        lines[i] = ""; // 删除原始行
-        continue; // 跳过后续处理
-    }else if (hnc == 0 && subii.indexOf("hostname=") == 0) { //hostname 部分
+            } else if (hnc == 0 && subii.indexOf("hostname=") == 0) { //hostname 部分
                 hostname = (Phin0 || Phout0 || Preg || Pregout) ? HostNamecheck(subi, Phin0, Phout0) : subi;//hostname 部分
             } else if (subii.indexOf("hostname=") != 0) { //rewrite 部分
                 var inflag = Rcheck(subi, Pin);
@@ -1303,17 +1319,12 @@ function HostNamecheck(content, parain, paraout) {
     if (nname.length == 0) {
         $notify("🤖 " + "重写引用  ➟ " + "⟦" + subtag + "⟧", "⛔️ 筛选参数: " + pfihn + pfohn, "⚠️ 主机名 hostname 中剩余 0️⃣ 项, 请检查参数及原始链接", nan_link)
     }
-// 生成最终输出
-let output = [];
-// ... 原有 output 填充逻辑 ...
-
-// [新增] 合并 hostname 到末尾
-if (hostname_list.length > 0) {
-    const uniqueHosts = [...new Set(hostname_list)];
-    output.push("hostname = " + uniqueHosts.join(", "));
-}
-
-return output.join("\n");
+    if(Preg){ nname = nname.map(Regex).filter(Boolean)
+      RegCheck(nname, "主机名hostname","regex", Preg) }
+    if(Pregout){ nname = nname.map(RegexOut).filter(Boolean)
+      RegCheck(nname, "主机名hostname", "regout", Pregout) }
+    hname = "hostname=" + nname.join(", ");
+    return hname
 }
 
 //Rewrite 筛选的函数
