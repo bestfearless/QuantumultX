@@ -114,8 +114,6 @@ let version = typeof $environment != "undefined" ? Number($environment.version.s
 let Perror = 0 //错误类型
 
 const ADDRes = `quantumult-x:///add-resource?remote-resource=url-encoded-json`
-// 新增：全局收集 hostname
-var hostname_list = [];
 var RLink0 = {
   "filter_remote": [],
   "rewrite_remote": [],
@@ -140,6 +138,9 @@ var para1 = para.slice(para.indexOf("#") + 1).replace(/\$type/g,"node_type_para_
 var mark0 = para.indexOf("#") != -1 ? true : false; //是否有參數需要解析
 var Pinfo = mark0 && para1.indexOf("info=") != -1 ? para1.split("info=")[1].split("&")[0] : 0;
 var ntf_flow = 0;
+// [新增] 全局收集 hostname
+var hostnames = [];
+
 //常用量
 const Base64 = new Base64Code();
 const escapeRegExp = str => str.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&'); //处理特殊符号以便正则匹配使用
@@ -1198,6 +1199,18 @@ function Rewrite_Filter(subs, Pin, Pout,Preg,Pregout) {
     var hnc = 0;
     var dwrite = []
     var hostname = ""
+  // ========== 在以下位置插入代码 ==========
+for (var i = 0; i < lines.length; i++) {
+    var l = lines[i].trim();
+    // [新增] 捕获 hostname 行并存入数组
+    if (/^hostname\s*=/i.test(l)) {
+        const domains = l.split(/hostname\s*=\s*/i)[1] || "";
+        domains.split(",").forEach(d => {
+            const domain = d.trim();
+            if (domain) hostnames.push(domain);
+        });
+        lines[i] = ""; // 清空原始行
+    }
     //$notify("S0","Content",subs)
     for (var i = 0; i < subs.length; i++) {
         subi = subs[i].trim();
@@ -1255,7 +1268,6 @@ function Rewrite_Filter(subs, Pin, Pout,Preg,Pregout) {
 }
 
 // 主机名处理
-
 function HostNamecheck(content, parain, paraout) {
     var hname = content.replace(/ /g, "").split("=")[1].split(",");
     var nname = [];
@@ -1281,15 +1293,6 @@ function HostNamecheck(content, parain, paraout) {
             nname.push(hname[i])
         }
     } //for j
-  // 新增：捕获 hostname 行
-if (content.toLowerCase().trim().startsWith("hostname")) {
-    let domains = content.split("=")[1] || "";
-    domains.split(",").forEach(d => {
-        let domain = d.trim();
-        if (domain) hostname_list.push(domain);
-    });
-    return ""; // 禁止输出原始 hostname 行
-}
     if (Pntf0 != 0) {
         if (paraout || parain) {
             var noname = dname.length <= 10 ? emojino[dname.length] : dname.length
@@ -1310,10 +1313,6 @@ if (content.toLowerCase().trim().startsWith("hostname")) {
       RegCheck(nname, "主机名hostname", "regout", Pregout) }
     hname = "hostname=" + nname.join(", ");
     return hname
-// 新增：合并 hostname
-if (hostname_list.length > 0) {
-    let unique_hosts = [...new Set(hostname_list)]; // 去重
-    output.unshift("hostname = " + unique_hosts.join(", ")); // 插入到第一行
 }
 
 //Rewrite 筛选的函数
@@ -3935,3 +3934,10 @@ function OR(...args) {
 function NOT(array) {
     return array.map(c => !c);
 }
+  // ========== 在以下位置插入代码 ==========
+// [新增] 合并去重并插入到配置顶部
+if (hostnames.length > 0) {
+    const uniqueHosts = [...new Set(hostnames)];
+    output.unshift("hostname = " + uniqueHosts.join(", "));
+}
+// ====================================
