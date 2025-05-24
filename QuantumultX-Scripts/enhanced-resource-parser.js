@@ -1,34 +1,34 @@
-// ====== 插入到文件顶部 ======
-var __mergedHostname = new Set();
+// ====== 插入到解析器文件顶部 ======
+var __hostnames = new Set();
 
 // 劫持原解析器的行处理逻辑
-var __originalLineHandler = typeof handleLine === "function" ? handleLine : function() {};
-handleLine = function(line) {
-  var l = line.trim();
+var __originalProcessLine = processLine;
+processLine = function(line) {
+  const trimmed = line.trim();
   
-  // 捕获所有 hostname 行并删除原行
-  if (/^\s*hostname\s*=/i.test(l)) {
-    var domains = l.split(/hostname\s*=\s*/i)[1] || "";
+  // 捕获所有 hostname 行
+  if (/^hostname\s*=/i.test(trimmed)) {
+    const domains = trimmed.split(/hostname\s*=\s*/i)[1] || "";
     domains.split(",").forEach(d => {
-      var domain = d.trim();
-      if (domain) __mergedHostname.add(domain);
+      const domain = d.trim();
+      if (domain) __hostnames.add(domain);
     });
-    return ""; // 禁止原行输出
+    return ""; // 删除原始行
   }
   
-  return __originalLineHandler(line);
+  return __originalProcessLine(line);
 };
 
 // 劫持最终输出
-var __originalFinalize = typeof finalize === "function" ? finalize : function() {};
+var __originalFinalize = finalize;
 finalize = function(output) {
-  var result = __originalFinalize(output);
+  const result = __originalFinalize(output);
   // 插入合并行到末尾
-  if (__mergedHostname.size > 0) {
-    result += "\nhostname = " + Array.from(__mergedHostname).join(", ");
-  }
-  return result;
+  return __hostnames.size > 0 
+    ? result + "\nhostname = " + Array.from(__hostnames).join(", ")
+    : result;
 };
+// ====== 代码结束 ======
 // ====== 代码结束 ======
 /** 
 ☑️ 资源解析器 ©𝐒𝐡𝐚𝐰𝐧  ⟦2025-05-16 10:58⟧
