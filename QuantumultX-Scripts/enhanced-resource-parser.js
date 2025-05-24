@@ -136,10 +136,10 @@ content0 = link0.indexOf("nsloon.com/openloon/import?plugin=") != -1 ? ToLink(li
 var para = /^(http|https)\:\/\//.test(link0) ? link0 : content0.split("\n")[0];
 var para1 = para.slice(para.indexOf("#") + 1).replace(/\$type/g,"node_type_para_prefix").replace(/\$emoji/g,"node_emoji_flag_prefix").replace(/\$tag/g,"node_tag_prefix").replace(/\$index/g,"node_index_prefix") //防止参数中其它位置也存在"#"
 var mark0 = para.indexOf("#") != -1 ? true : false; //是否有參數需要解析
+// [新增] 全局收集 hostname
+var hostname_list = []; // 确保变量名统一
 var Pinfo = mark0 && para1.indexOf("info=") != -1 ? para1.split("info=")[1].split("&")[0] : 0;
 var ntf_flow = 0;
-// [新增] 全局收集 hostname
-var hostnames = [];
 //常用量
 const Base64 = new Base64Code();
 const escapeRegExp = str => str.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&'); //处理特殊符号以便正则匹配使用
@@ -1201,15 +1201,6 @@ function Rewrite_Filter(subs, Pin, Pout,Preg,Pregout) {
     //$notify("S0","Content",subs)
     for (var i = 0; i < subs.length; i++) {
         subi = subs[i].trim();
-       // [新增] 捕获 hostname 行并存入数组
-    if (/^hostname\s*=/i.test(l)) {
-        const domains = l.split(/hostname\s*=\s*/i)[1] || "";
-        domains.split(",").forEach(d => {
-            const domain = d.trim();
-            if (domain) hostnames.push(domain);
-        });
-        lines[i] = ""; // 清空原始行
-    }
         var subii = subi.replace(/ /g, "")
         if (subi != "" && (subi.indexOf(" url ")!=-1 || subi.indexOf("host")!=-1 || subi.indexOf(" url-and-header ")!=-1 || /^hostname\=/.test(subii))) {
             const notecheck = (item) => subi.indexOf(item) == 0
@@ -1269,6 +1260,17 @@ function HostNamecheck(content, parain, paraout) {
     var nname = [];
     var dname = []; //删除项
     for (var i = 0; i < hname.length; i++) {
+          // [新增] 捕获 hostname 行（直接插入循环内）
+    var l = lines[i].trim();
+    if (l.toLowerCase().startsWith("hostname")) {
+        const domains = l.split(/hostname\s*=\s*/i)[1] || "";
+        domains.split(",").forEach(d => {
+            const domain = d.trim();
+            if (domain) hostname_list.push(domain);
+        });
+        lines[i] = ""; // 删除原始行
+        continue; // 跳过后续处理
+    }
         dd = hname[i]
         const excludehn = (item) => dd.indexOf(item) != -1;
         if (paraout && paraout != "") { //存在 out 参数时
@@ -1309,6 +1311,11 @@ function HostNamecheck(content, parain, paraout) {
       RegCheck(nname, "主机名hostname", "regout", Pregout) }
     hname = "hostname=" + nname.join(", ");
     return hname
+      // [新增] 合并 hostname 到顶部
+    if (hostname_list.length > 0) {
+        const uniqueHosts = [...new Set(hostname_list)];
+        output.unshift("hostname = " + uniqueHosts.join(", "));
+    }
 }
 
 //Rewrite 筛选的函数
@@ -3929,9 +3936,4 @@ function OR(...args) {
 
 function NOT(array) {
     return array.map(c => !c);
-}
-// [新增] 合并去重并插入到配置顶部
-if (hostnames.length > 0) {
-    const uniqueHosts = [...new Set(hostnames)];
-    output.unshift("hostname = " + uniqueHosts.join(", "));
 }
