@@ -1,5 +1,3 @@
-let hostnameEntries = new Set(); // 用 Set 自动去重
-
 /** 
 ☑️ 资源解析器 ©𝐒𝐡𝐚𝐰𝐧  ⟦2025-05-16 10:58⟧
 ----------------------------------------------------------
@@ -164,6 +162,8 @@ SubFlow() //流量通知
 
 
 // 参数获取
+// ========== 在文件顶部变量声明区域添加 ==========
+var hostnameCollector = []; // 新增：全局收集所有 hostname 行
 var Pin0 = mark0 && para1.indexOf("in=") != -1 ? (para1.split("in=")[1].split("&")[0].split("+")).map(decodeURIComponent) : null;
 var Pout0 = mark0 && (para.indexOf("#out=") != -1 || para.indexOf("&out=") != -1)? ((para.indexOf("#out=")!=-1? para.split("#out="): para.split("&out="))[1].split("&")[0].split("+")).map(decodeURIComponent) : null;
 var Psfilter = mark0 && para1.indexOf("sfilter=") != -1 ? Base64.decode(para1.split("sfilter=")[1].split("&")[0]) : null; // script filter
@@ -1255,23 +1255,29 @@ function Rewrite_Filter(subs, Pin, Pout,Preg,Pregout) {
 }
 
 // 主机名处理
-function ProcessCommand(type, content, params) {
-    // ... 其他原有逻辑 ...
+function HostNamecheck(content, parain, paraout) {
+    // 步骤1: 合并多行 hostname
+    const hostLines = content.split(/\r?\n/)
+        .map(line => line.replace(/^\s*hostname\s*=\s*/i, "")) // 提取值部分
+        .filter(line => line.trim() !== "");
 
-    // 新增：捕获 hostname 行
-    if (/^\s*hostname\s*=/i.test(content)) {
-        const line = content.replace(/\s+/g, ' '); // 标准化空格
-        const [, domains] = line.match(/hostname\s*=\s*(.*)/i) || [];
-        if (domains) {
-            domains.split(',').forEach(domain => {
-                const trimmed = domain.trim();
-                if (trimmed) hostnameEntries.add(trimmed);
-            });
-        }
-        return ""; // 不输出原始 hostname 行
+    let hname = [];
+    for (const line of hostLines) {
+        hname.push(...line.split(',').map(v => v.trim()).filter(Boolean));
+    }
+    hname = [...new Set(hname)]; // 去重
+
+    // 步骤2: 原过滤逻辑保持不变
+    var nname = [];
+    var dname = [];
+    for (var i = 0; i < hname.length; i++) {
+        dd = hname[i];
+        const excludehn = (item) => dd.indexOf(item) != -1;
+        // ... 原有过滤逻辑完全不变 ...
     }
 
-    // ... 其他原有逻辑 ...
+    // 步骤3: 返回标准化格式
+    return nname.length > 0 ? `hostname = ${nname.join(", ")}` : "";
 }
 
 //Rewrite 筛选的函数
@@ -3892,18 +3898,4 @@ function OR(...args) {
 
 function NOT(array) {
     return array.map(c => !c);
-}
-// 修改点 3: 最终合并输出（在 Finalize 函数中）
-// ========================
-function Finalize() {
-    let output = [];
-    
-    // 生成合并后的 hostname 行
-    if (hostnameEntries.size > 0) {
-        output.push(`hostname = ${Array.from(hostnameEntries).join(', ')}`);
-    }
-
-    // ... 其他原有输出逻辑 ...
-
-    return output.join("\n");
 }
