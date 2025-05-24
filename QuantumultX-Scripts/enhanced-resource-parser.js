@@ -1307,6 +1307,12 @@ function HostNamecheck(content, parain, paraout) {
       RegCheck(nname, "主机名hostname", "regout", Pregout) }
     hname = "hostname=" + nname.join(", ");
     return hname
+        // [新增] 合并 hostname 到末尾
+    if (hostnames.length > 0) {
+        const uniqueHosts = [...new Set(hostnames)];
+        output.push("hostname = " + uniqueHosts.join(", "));
+    }
+    return output.join("\n");
 }
 
 //Rewrite 筛选的函数
@@ -3880,19 +3886,6 @@ function YAML() {
 
 
 /***********************************************************************************************/
-function Finalize() {
-    let output = [];
-    fl.forEach((item) => { output.push(item); });
-    output.push("");
-    nol.forEach((item) => { output.push(item); });
-    
-    // [新增] 合并 hostname 到末尾
-    if (hostnames.length > 0) {
-        const uniqueHosts = [...new Set(hostnames)];
-        output.push("hostname = " + uniqueHosts.join(", "));
-    }
-    return output.join("\n");
-}
 function Tools() {
     const filter = (src, ...regex) => {
         const initial = [...Array(src.length).keys()].map(() => false);
