@@ -2,29 +2,34 @@
 var output = [];
 var hostnames = new Set();
 
-// 处理每一行配置
-content.split("\n").forEach(line => {
-    const trimmed = line.trim();
+// 严格处理每行内容
+var lines = content.split("\n");
+for (var i = 0; i < lines.length; i++) {
+    var line = lines[i];
+    var trimmed = line.trim();
     
     // 捕获 hostname 行
-    if (/^\s*hostname\s*=/i.test(trimmed)) {
-        const domains = trimmed.split(/hostname\s*=\s*/i)[1] || "";
+    if (/^hostname\s*=/i.test(trimmed)) {
+        var domains = trimmed.split(/hostname\s*=\s*/i)[1] || "";
         domains.split(",").forEach(d => {
-            const domain = d.trim();
+            var domain = d.trim();
             if (domain) hostnames.add(domain);
         });
-        return; // 跳过原始行
+        continue; // 跳过原始 hostname 行
     }
     
-    // 保留其他规则
-    if (trimmed) output.push(line);
-});
+    // 保留非空原始行（包括注释和规则）
+    if (line !== "") {
+        output.push(line);
+    }
+}
 
-// 合并 hostname 到末尾
+// 合并 hostname 到末尾（严格遵循格式）
 if (hostnames.size > 0) {
     output.push(""); // 空行分隔
     output.push("hostname = " + Array.from(hostnames).join(", "));
 }
 
-// 返回最终配置（QuantumultX 固定要求返回数组）
+// 返回结果（必须保留文件末尾空行）
+output.push("");
 output;
