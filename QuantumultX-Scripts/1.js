@@ -1,19 +1,25 @@
-// 合并 hostname 到一个变量中的代码
+// 读取输入
+const input = document.body.textContent;
 
-let mergedHostnames = '';
+// 初始化存储主机名的数组
+const hostnamesList = [];
 
-const hostnamesList = [
-    'ad.life.360.cn',
-    'gateway.36kr.com',
-    'download.dmallcdn.com',
-    'm.360buyimg.com',
-    'xps11.xiaopeng.com',
-    'static.122.gov.cn'
-];
+// 按换行符分割输入数据
+const lines = input.split('\n');
 
-// 使用 join() 方法将 hostname 合并到一个字符串中，用逗号分隔
-mergedHostnames = `hostname = ${hostnamesList.join(', ')}`;
+// 遍历每一行数据
+lines.forEach(line => {
+    // 提取 hostname 的值（假设格式为 "host: xxx.com"）
+    const hostnameMatch = line.match(/host:\s*(.*)/);
+    if (hostnameMatch) {
+        hostnamesList.push(hostnameMatch[1]);
+    }
+});
 
+// 合并所有主机名，用逗号分隔
+const mergedHostnames = hostnamesList.join(', ');
+
+// 输出结果
 console.log(mergedHostnames);
 
 //beginning 解析器正常使用，調試註釋此部分
@@ -3440,16 +3446,6 @@ function YAML() {
                         if(line.match(invalidLine)) {
                                 continue;
                         }
-                    // [新增] 捕获 hostname 行
-    if (l.toLowerCase().startsWith("hostname")) {
-        const domains = l.split(/hostname\s*=\s*/i)[1] || "";
-        domains.split(",").forEach(d => {
-            const domain = d.trim();
-            if (domain) hostname_list.push(domain);
-        });
-        lines[i] = ""; // 删除原始行
-        continue; // 跳过后续处理
-    }
                 
                         if(m = regLevel.exec(line)) {
                                 level = m[1].length;
