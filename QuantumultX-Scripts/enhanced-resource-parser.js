@@ -1,47 +1,30 @@
-// ====== 替换文件顶部劫持代码 ======
+// ====== 插入到文件顶部 ======
 var __hostnames = new Set();
 
-// 劫持核心解析逻辑（终极兼容版）
-var __originalParse = parse;
-parse = function(content) {
-  try {
-    __hostnames.clear();
-    
-    // 预处理：捕获所有 hostname
-    content.split("\n").forEach(line => {
-      const trimmed = line.trim();
-      if (/^\s*hostname\s*=/i.test(trimmed)) {
-        const domains = trimmed.split(/hostname\s*=\s*/i)[1] || "";
-        domains.split(",").forEach(d => {
-          const domain = d.trim();
-          if (domain) __hostnames.add(domain);
-        });
-      }
+// 直接操作核心解析流程（兼容性终极版）
+var __originalLines = lines; // 备份原始行数组
+lines = __originalLines.map(line => {
+  const trimmed = line.trim();
+  
+  // 捕获并删除所有 hostname 行
+  if (/^\s*hostname\s*=/i.test(trimmed)) {
+    const domains = trimmed.split(/hostname\s*=\s*/i)[1] || "";
+    domains.split(",").forEach(d => {
+      const domain = d.trim();
+      if (domain) __hostnames.add(domain);
     });
-
-    // 生成原始配置（强制类型安全）
-    let result = __originalParse(content);
-    if (result === undefined || result === null) {
-      result = "";
-    } else if (Array.isArray(result)) {
-      result = result.join("\n");
-    } else if (typeof result !== "string") {
-      result = String(result);
-    }
-
-    // 合并 hostname 到末尾（严格遵循格式）
-    if (__hostnames.size > 0) {
-      const hostnameLine = "\nhostname = " + Array.from(__hostnames).join(", ");
-      result = result.replace(/\s+$/, "") + hostnameLine;
-    }
-
-    return result;
-  } catch (e) {
-    $notify("⚠️ 解析器崩溃", "错误详情", e.message);
-    return ""; // 返回空字符串防止 {} 错误
+    return ""; // 删除原行
   }
-};
+  return line;
+});
 
+// 在最终输出前插入合并的 hostname
+var __originalOutput = output;
+output = [...__originalOutput];
+if (__hostnames.size > 0) {
+  output.push(""); // 空行分隔
+  output.push("hostname = " + Array.from(__hostnames).join(", "));
+}
 //beginning 解析器正常使用，調試註釋此部分
 
 let [link0, content0, subinfo] = [$resource.link, $resource.content, $resource.info]
