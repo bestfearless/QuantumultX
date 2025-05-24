@@ -1,36 +1,35 @@
-// ====== 完整替换原解析器内容 ======
-(function() {
-    // 安全作用域封装
-    const hostnames = new Set();
+// ====== 完整替换解析器内容 ======
+var output = [];
+var hostnames = [];
+
+// 处理每行配置（兼容 ES5 语法）
+var lines = content.split("\n");
+for (var i = 0; i < lines.length; i++) {
+    var line = lines[i];
+    var trimmed = line.trim();
     
-    // 预处理：删除所有 hostname 行并收集域名
-    const processedContent = content.split("\n")
-        .map(line => {
-            const trimmed = line.trim();
-            if (/^hostname\s*=/i.test(trimmed)) {
-                const [, domains] = trimmed.match(/hostname\s*=\s*(.*)/i) || [];
-                if (domains) {
-                    domains.split(",").forEach(d => {
-                        const domain = d.trim();
-                        if (domain) hostnames.add(domain);
-                    });
-                }
-                return ""; // 删除原行
+    // 捕获 hostname 行（兼容所有格式）
+    if (trimmed.toLowerCase().indexOf("hostname=") === 0) {
+        var domains = trimmed.split(/hostname\s*=\s*/i)[1] || "";
+        domains.split(",").forEach(function(d) {
+            var domain = d.trim();
+            if (domain && hostnames.indexOf(domain) === -1) {
+                hostnames.push(domain);
             }
-            return line;
-        })
-        .join("\n");
-    
-    // 生成原始配置（强制类型安全）
-    let result = parse(processedContent);
-    if (typeof result !== "string") {
-        result = "";
+        });
+        continue; // 删除原行
     }
     
-    // 合并 hostname 到末尾
-    if (hostnames.size > 0) {
-        result += "\nhostname = " + Array.from(hostnames).join(", ");
-    }
-    
-    return result; // 显式返回字符串
-})();
+    // 保留其他内容（含注释、空行）
+    output.push(line);
+}
+
+// 合并 hostname 到末尾（严格遵循 QuantumultX 格式）
+if (hostnames.length > 0) {
+    output.push(""); // 空行分隔
+    output.push("hostname = " + hostnames.join(", "));
+}
+
+// 返回结果（必须为数组且保留文件末尾空行）
+output.push("");
+output;
