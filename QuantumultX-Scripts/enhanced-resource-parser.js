@@ -134,12 +134,11 @@ content0 = link0.indexOf("nsloon.com/openloon/import?plugin=") != -1 ? ToLink(li
 
 
 var para = /^(http|https)\:\/\//.test(link0) ? link0 : content0.split("\n")[0];
-var para1 = para.slice(para.indexOf("#") + 1).replace(/\$type/g,"node_type_para_prefix").replace(/\$emoji/g,"node_emoji_flag_prefix").replace(/\$tag/g,"node_tag_prefix").replace(/\$index/g,"node_index_prefix") //防止参数中其它位置也存在"#"
-var mark0 = para.indexOf("#") != -1 ? true : false; //是否有參數需要解析
-// [新增] 全局收集 hostname
-var hostname_list = [];
+var para1 = para.slice(para.indexOf("#") + 1).replace(/\$type/g,"node_type_para_prefix").replace(/\$emoji/g,"node_emoji_flag_prefix").replace(/\$tag/g,"node_tag_prefix").replace(/\$index/g,"node_index_prefix");
+var mark0 = para.indexOf("#") != -1 ? true : false;
 var Pinfo = mark0 && para1.indexOf("info=") != -1 ? para1.split("info=")[1].split("&")[0] : 0;
 var ntf_flow = 0;
+var hostnames = []; // [新增] 全局存储 hostname
 //常用量
 const Base64 = new Base64Code();
 const escapeRegExp = str => str.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&'); //处理特殊符号以便正则匹配使用
@@ -555,17 +554,6 @@ function SubFlow() {
 //flowcheck-fake-server
 function flowcheck(cnt) {
     for (var i = 0; i < cnt.length; i++) {
-          var l = lines[i].trim();
-    // [新增] 捕获 hostname 行
-    if (l.toLowerCase().startsWith("hostname")) {
-        const domains = l.split(/hostname\s*=\s*/i)[1] || "";
-        domains.split(",").forEach(d => {
-            const domain = d.trim();
-            if (domain) hostname_list.push(domain);
-        });
-        lines[i] = ""; // 删除原始行
-        continue; // 跳过后续处理
-    }
         var item = cnt[i];
         var nl = item.slice(item.indexOf("tag"))
         var nm = nl.slice(nl.indexOf("=") + 1)
@@ -1210,14 +1198,22 @@ function Rewrite_Filter(subs, Pin, Pout,Preg,Pregout) {
     var dwrite = []
     var hostname = ""
     //$notify("S0","Content",subs)
-    for (var i = 0; i < subs.length; i++) {
-        subi = subs[i].trim();
-        var subii = subi.replace(/ /g, "")
-        if (subi != "" && (subi.indexOf(" url ")!=-1 || subi.indexOf("host")!=-1 || subi.indexOf(" url-and-header ")!=-1 || /^hostname\=/.test(subii))) {
-            const notecheck = (item) => subi.indexOf(item) == 0
-            if (noteK.some(notecheck)) { // 注释项跳过 
-                continue;
-            } else if (hnc == 0 && subii.indexOf("hostname=") == 0) { //hostname 部分
+    for (var i = 0; i < lines.length; i++) {
+    var l = lines[i].trim();
+    if (l == "" || l.indexOf("#") == 0) {
+        continue;
+    }
+    
+    // [新增] 捕获 hostname 行
+    if (l.toLowerCase().startsWith("hostname")) {
+        const domains = l.split(/hostname\s*=\s*/i)[1] || "";
+        domains.split(",").forEach(d => {
+            const domain = d.trim();
+            if (domain) hostnames.push(domain);
+        });
+        lines[i] = ""; // 删除原始行
+        continue;
+    } else if (hnc == 0 && subii.indexOf("hostname=") == 0) { //hostname 部分
                 hostname = (Phin0 || Phout0 || Preg || Pregout) ? HostNamecheck(subi, Phin0, Phout0) : subi;//hostname 部分
             } else if (subii.indexOf("hostname=") != 0) { //rewrite 部分
                 var inflag = Rcheck(subi, Pin);
@@ -3884,6 +3880,19 @@ function YAML() {
 
 
 /***********************************************************************************************/
+function Finalize() {
+    let output = [];
+    fl.forEach((item) => { output.push(item); });
+    output.push("");
+    nol.forEach((item) => { output.push(item); });
+    
+    // [新增] 合并 hostname 到末尾
+    if (hostnames.length > 0) {
+        const uniqueHosts = [...new Set(hostnames)];
+        output.push("hostname = " + uniqueHosts.join(", "));
+    }
+    return output.join("\n");
+}
 function Tools() {
     const filter = (src, ...regex) => {
         const initial = [...Array(src.length).keys()].map(() => false);
@@ -3931,10 +3940,4 @@ function OR(...args) {
 
 function NOT(array) {
     return array.map(c => !c);
-}
-function Finalize() {
-    let output = [];
-    // ...其他处理...
-    output.push("hostname = a.com, b.com"); // ✅ 末尾插入
-    return output.join("\n");
 }
