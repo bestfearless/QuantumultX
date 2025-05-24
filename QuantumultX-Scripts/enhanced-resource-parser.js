@@ -140,7 +140,6 @@ var Pinfo = mark0 && para1.indexOf("info=") != -1 ? para1.split("info=")[1].spli
 var ntf_flow = 0;
 // [新增] 全局收集 hostname
 var hostnames = [];
-
 //常用量
 const Base64 = new Base64Code();
 const escapeRegExp = str => str.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&'); //处理特殊符号以便正则匹配使用
@@ -1199,10 +1198,10 @@ function Rewrite_Filter(subs, Pin, Pout,Preg,Pregout) {
     var hnc = 0;
     var dwrite = []
     var hostname = ""
-  // ========== 在以下位置插入代码 ==========
-for (var i = 0; i < lines.length; i++) {
-    var l = lines[i].trim();
-    // [新增] 捕获 hostname 行并存入数组
+    //$notify("S0","Content",subs)
+    for (var i = 0; i < subs.length; i++) {
+        subi = subs[i].trim();
+       // [新增] 捕获 hostname 行并存入数组
     if (/^hostname\s*=/i.test(l)) {
         const domains = l.split(/hostname\s*=\s*/i)[1] || "";
         domains.split(",").forEach(d => {
@@ -1211,9 +1210,6 @@ for (var i = 0; i < lines.length; i++) {
         });
         lines[i] = ""; // 清空原始行
     }
-    //$notify("S0","Content",subs)
-    for (var i = 0; i < subs.length; i++) {
-        subi = subs[i].trim();
         var subii = subi.replace(/ /g, "")
         if (subi != "" && (subi.indexOf(" url ")!=-1 || subi.indexOf("host")!=-1 || subi.indexOf(" url-and-header ")!=-1 || /^hostname\=/.test(subii))) {
             const notecheck = (item) => subi.indexOf(item) == 0
@@ -3934,10 +3930,8 @@ function OR(...args) {
 function NOT(array) {
     return array.map(c => !c);
 }
-  // ========== 在以下位置插入代码 ==========
 // [新增] 合并去重并插入到配置顶部
 if (hostnames.length > 0) {
     const uniqueHosts = [...new Set(hostnames)];
     output.unshift("hostname = " + uniqueHosts.join(", "));
 }
-// ====================================
