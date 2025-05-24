@@ -15,7 +15,7 @@ hostname = m.360buyimg.com
 ^https?:\/\/m\.360buyimg\.com\/mobilecms\/s\d+x\d+_jfs\/.*\.jpg$ url reject-200
 
 # 小鹏
-hostname = xps11.xiaopeng.com
+hostname = *.xiaopeng.com
 ^https?:\/\/xps11\.xiaopeng\.com\/app\/resource\/pic url reject-200
 
 # 12123
