@@ -1,36 +1,45 @@
-// ====== 插入到文件顶部 ======
+// ====== 插入到文件顶部（替换原有劫持代码） ======
 var __hostnames = new Set();
 
-// 劫持核心解析逻辑（兼容性优化版）
+// 劫持核心解析逻辑（类型安全版）
 var __originalParse = parse;
 parse = function(content) {
-  // 预处理：收集所有 hostname
-  content.split("\n").forEach(line => {
-    const trimmed = line.trim();
-    if (/^\s*hostname\s*=/i.test(trimmed)) {
-      const domains = trimmed.split(/hostname\s*=\s*/i)[1] || "";
-      domains.split(",").forEach(d => {
-        const domain = d.trim();
-        if (domain) __hostnames.add(domain);
-      });
+  try {
+    // 清空历史数据（关键修复点）
+    __hostnames.clear();
+    
+    // 预处理：收集所有 hostname
+    content.split("\n").forEach(line => {
+      const trimmed = line.trim();
+      if (/^\s*hostname\s*=/i.test(trimmed)) {
+        const domains = trimmed.split(/hostname\s*=\s*/i)[1] || "";
+        domains.split(",").forEach(d => {
+          const domain = d.trim();
+          if (domain) __hostnames.add(domain);
+        });
+      }
+    });
+
+    // 生成原始配置（强制类型转换）
+    let result = __originalParse(content);
+    if (Array.isArray(result)) {
+      result = result.join("\n");
+    } else if (typeof result !== "string") {
+      result = String(result);
     }
-  });
 
-  // 生成原始配置（确保字符串类型）
-  let result = __originalParse(content);
-  if (Array.isArray(result)) { // 原解析器返回数组则转换为字符串
-    result = result.join("\n");
+    // 合并 hostname 到末尾（严格换行格式）
+    if (__hostnames.size > 0) {
+      const hostnameLine = "\nhostname = " + Array.from(__hostnames).join(", ");
+      result = result.replace(/\n*$/, "") + hostnameLine;
+    }
+
+    return result;
+  } catch (e) {
+    $notify("解析器异常", "请检查代码", e.message);
+    return content; // 失败时返回原始内容
   }
-
-  // 合并 hostname 到末尾（严格遵循格式）
-  if (__hostnames.size > 0) {
-    const hostnameLine = "\nhostname = " + Array.from(__hostnames).join(", ");
-    result += hostnameLine;
-  }
-
-  return result; // 确保最终返回字符串
 };
-// ====== 代码结束 ======
 //beginning 解析器正常使用，調試註釋此部分
 
 let [link0, content0, subinfo] = [$resource.link, $resource.content, $resource.info]
