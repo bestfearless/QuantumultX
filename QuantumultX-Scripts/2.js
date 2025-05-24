@@ -1,4 +1,7 @@
-let GlobalHostNameSet = new Set();
+// ========================
+// 修改点 1: 全局变量收集 hostname
+// ========================
+let hostnameEntries = new Set(); // 用 Set 自动去重
 /** 
 ☑️ 资源解析器 ©𝐒𝐡𝐚𝐰𝐧  ⟦2025-05-16 10:58⟧
 ----------------------------------------------------------
@@ -345,9 +348,7 @@ function Parser() {
   } else {
     total=""
   }
-    const mergedHost = GetMergedHostName();
-total = [mergedHost, total].filter(Boolean).join('\n');
-$done({ content: total });
+    $done({ content: total });
 }
 
 if (typeof($resource)!=="undefined" && PProfile == 0) {
@@ -508,9 +509,7 @@ function ResourceParse() {
         //$notify("添加流量信息","xxx","xxxx")
         $done({ content: total, info: {bytes_used: 3073741824, bytes_remaining: 2147483648, expire_date: 1854193966}});
       //$notify("done?","strange")
-      } else { const mergedHost = GetMergedHostName();
-total = [mergedHost, total].filter(Boolean).join('\n');
-$done({ content: total });}
+      } else { $done({ content: total });}
     } else {
       if(Perror == 0) {
       $notify("❓❓ 友情提示 ➟ "+ "⟦" + subtag + "⟧", "⚠️⚠️ 解析后无有效内容", "🚥🚥 请自行检查相关参数, 或者点击通知跳转并发送链接反馈", bug_link)
@@ -1210,6 +1209,7 @@ function Rewrite_Filter(subs, Pin, Pout,Preg,Pregout) {
             if (noteK.some(notecheck)) { // 注释项跳过 
                 continue;
             } else if (hnc == 0 && subii.indexOf("hostname=") == 0) { //hostname 部分
+                hostname = (Phin0 || Phout0 || Preg || Pregout) ? HostNamecheck(subi, Phin0, Phout0) : subi;//hostname 部分
             } else if (subii.indexOf("hostname=") != 0) { //rewrite 部分
                 var inflag = Rcheck(subi, Pin);
                 var outflag = Rcheck(subi, Pout);
@@ -1257,7 +1257,7 @@ function Rewrite_Filter(subs, Pin, Pout,Preg,Pregout) {
 }
 
 // 主机名处理
-function HostNamecheck(content, parain, paraout) {
+function ProcessCommand(type, content, params) {
     var hname = content.replace(/ /g, "").split("=")[1].split(",");
     var nname = [];
     var dname = []; //删除项
@@ -1282,6 +1282,18 @@ function HostNamecheck(content, parain, paraout) {
             nname.push(hname[i])
         }
     } //for j
+  // 新增：捕获 hostname 行
+    if (/^\s*hostname\s*=/i.test(content)) {
+        const line = content.replace(/\s+/g, ' '); // 标准化空格
+        const [, domains] = line.match(/hostname\s*=\s*(.*)/i) || [];
+        if (domains) {
+            domains.split(',').forEach(domain => {
+                const trimmed = domain.trim();
+                if (trimmed) hostnameEntries.add(trimmed);
+            });
+        }
+        return ""; // 不输出原始 hostname 行
+    }
     if (Pntf0 != 0) {
         if (paraout || parain) {
             var noname = dname.length <= 10 ? emojino[dname.length] : dname.length
@@ -1302,6 +1314,16 @@ function HostNamecheck(content, parain, paraout) {
       RegCheck(nname, "主机名hostname", "regout", Pregout) }
     hname = "hostname=" + nname.join(", ");
     return hname
+  // 修改点 3: 最终合并输出（在 Finalize 函数中）
+// ========================
+function Finalize() {
+    let output = [];
+    
+    // 生成合并后的 hostname 行
+    if (hostnameEntries.size > 0) {
+        output.push(`hostname = ${Array.from(hostnameEntries).join(', ')}`);
+    }
+    return output.join("\n");
 }
 
 //Rewrite 筛选的函数
@@ -3922,9 +3944,4 @@ function OR(...args) {
 
 function NOT(array) {
     return array.map(c => !c);
-}
-
-function GetMergedHostName() {
-  if (GlobalHostNameSet.size === 0) return "";
-  return "hostname=" + Array.from(GlobalHostNameSet).join(",");
 }
