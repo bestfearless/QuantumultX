@@ -1,75 +1,36 @@
-// 开始 解析器正常使用，调试注释此部分
-
-let [link0, content0, subinfo] = [$resource.link, $resource.content, $resource.info]
-let version = typeof $environment != "undefined" ? Number($environment.version.split("build")[1]) : 0 // 版本号
-let Perror = 0 // 错误类型
-
-const ADDRes = `quantumult-x:///add-resource?remote-resource=url-encoded-json`
-var RLink0 = {
-    "filter_remote": [],
-    "rewrite_remote": [],
-    "server_remote": [],
-}
-const Field = {
-    "filter" :
-
-// prompt 被截断，保留现有代码...
-
-    return nodes;
-}
-
-function mergeHostnames(nodes) {
-    // 合并相同的 hostname
-    const mergedNodes = [];
-    const seenHostnames = new Set();
-
-    for (const node of nodes) {
-        if (!node.hostname) continue;
-
-        if (seenHostnames.has(node.hostname)) {
-            const lastNode = mergedNodes.find(n => n.hostname === node.hostname);
-            // 合并规则：保留最后一个或合并配置（可自定义逻辑）
-            if (lastNode) {
-                // 示例：将新节点的配置添加到已存在的节点中
-                lastNode.rules.push(...node.rules);
-                lastNode.servers.push(...node.servers);
+// ====== 完整替换原解析器内容 ======
+(function() {
+    // 安全作用域封装
+    const hostnames = new Set();
+    
+    // 预处理：删除所有 hostname 行并收集域名
+    const processedContent = content.split("\n")
+        .map(line => {
+            const trimmed = line.trim();
+            if (/^hostname\s*=/i.test(trimmed)) {
+                const [, domains] = trimmed.match(/hostname\s*=\s*(.*)/i) || [];
+                if (domains) {
+                    domains.split(",").forEach(d => {
+                        const domain = d.trim();
+                        if (domain) hostnames.add(domain);
+                    });
+                }
+                return ""; // 删除原行
             }
-        } else {
-            mergedNodes.push(node);
-            seenHostnames.add(node.hostname);
-        }
+            return line;
+        })
+        .join("\n");
+    
+    // 生成原始配置（强制类型安全）
+    let result = parse(processedContent);
+    if (typeof result !== "string") {
+        result = "";
     }
-
-    return mergedNodes;
-}
-
-function getNodeInfo(nodes) {
-    const filter = [];
-    for (let i of nodes) {
-        if (!i.type || !i.data) continue;
-        const type = i.type;
-
-        switch (type) {
-            case "filter_remote":
-                filter.push(i);
-                break;
-            default:
-                // 其他处理
-                break;
-        }
+    
+    // 合并 hostname 到末尾
+    if (hostnames.size > 0) {
+        result += "\nhostname = " + Array.from(hostnames).join(", ");
     }
-
-    return { filter, rename };
-}
-
-function AND(...args) {
-    return args.reduce((a, b) => a.map((c, i) => b[i] && c));
-}
-
-function OR(...args) {
-    return args.reduce((a, b) => a.map((c, i) => b[i] || c));
-}
-
-function NOT(array) {
-    return array.map(c => !c);
-}
+    
+    return result; // 显式返回字符串
+})();
