@@ -1,14 +1,13 @@
-// ====== 插入到文件顶部（替换原有劫持代码） ======
+// ====== 替换文件顶部劫持代码 ======
 var __hostnames = new Set();
 
-// 劫持核心解析逻辑（类型安全版）
+// 劫持核心解析逻辑（终极兼容版）
 var __originalParse = parse;
 parse = function(content) {
   try {
-    // 清空历史数据（关键修复点）
     __hostnames.clear();
     
-    // 预处理：收集所有 hostname
+    // 预处理：捕获所有 hostname
     content.split("\n").forEach(line => {
       const trimmed = line.trim();
       if (/^\s*hostname\s*=/i.test(trimmed)) {
@@ -20,26 +19,29 @@ parse = function(content) {
       }
     });
 
-    // 生成原始配置（强制类型转换）
+    // 生成原始配置（强制类型安全）
     let result = __originalParse(content);
-    if (Array.isArray(result)) {
+    if (result === undefined || result === null) {
+      result = "";
+    } else if (Array.isArray(result)) {
       result = result.join("\n");
     } else if (typeof result !== "string") {
       result = String(result);
     }
 
-    // 合并 hostname 到末尾（严格换行格式）
+    // 合并 hostname 到末尾（严格遵循格式）
     if (__hostnames.size > 0) {
       const hostnameLine = "\nhostname = " + Array.from(__hostnames).join(", ");
-      result = result.replace(/\n*$/, "") + hostnameLine;
+      result = result.replace(/\s+$/, "") + hostnameLine;
     }
 
     return result;
   } catch (e) {
-    $notify("解析器异常", "请检查代码", e.message);
-    return content; // 失败时返回原始内容
+    $notify("⚠️ 解析器崩溃", "错误详情", e.message);
+    return ""; // 返回空字符串防止 {} 错误
   }
 };
+
 //beginning 解析器正常使用，調試註釋此部分
 
 let [link0, content0, subinfo] = [$resource.link, $resource.content, $resource.info]
