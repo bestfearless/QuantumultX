@@ -1,3 +1,112 @@
+/**
+ * 合并 Quantumult X 配置中的 hostname。
+ * 会将所有独立的 'hostname = ...' 行合并为一行，并置于配置内容的顶部。
+ * @param {string} configContent 原始配置内容的字符串。
+ * @returns {string} 处理后的配置内容字符串。
+ */
+function mergeHostnamesInConfig(configContent) {
+    if (!configContent || typeof configContent !== 'string') {
+        console.error("输入配置内容必须是一个字符串。");
+        return configContent; // 或者抛出错误
+    }
+
+    try {
+        const lines = configContent.split('\n');
+        const hostnames = new Set();
+        const otherLines = [];
+
+        // 正则表达式匹配 hostname 行，允许等号两边有空格，不区分大小写
+        // 捕获 '=' 后面的所有内容
+        const hostnameRegex = /^hostname\s*=\s*(.+)/i;
+
+        lines.forEach(line => {
+            // 保留原始行的前后空格，只对匹配逻辑使用trim()后的行
+            const trimmedLine = line.trim();
+            const match = trimmedLine.match(hostnameRegex);
+
+            if (match) {
+                // 提取 hostname 部分 (等号后面的所有内容)
+                const hostValues = match[1].trim();
+                // 如果一行内已有多个 hostname (以逗号分隔)，则拆分
+                hostValues.split(',').forEach(h => {
+                    const singleHost = h.trim();
+                    if (singleHost) { // 避免添加空字符串
+                        hostnames.add(singleHost);
+                    }
+                });
+            } else {
+                // 如果不是 hostname 行，则保留原始行 (包括注释、空行、规则等)
+                otherLines.push(line);
+            }
+        });
+
+        let result = '';
+        // 如果找到了 hostname，则创建合并后的 hostname 行
+        if (hostnames.size > 0) {
+            result += 'hostname = ' + Array.from(hostnames).join(', ') + '\n';
+        }
+
+        // 附加所有其他行
+        // 注意：这里要小心处理，确保最后一行后面没有多余的换行符，除非原始数据就有
+        result += otherLines.join('\n');
+
+        return result;
+
+    } catch (error) {
+        console.error("处理 Quantumult X 配置时发生错误: ", error);
+        return configContent; // 发生错误时返回原始内容
+    }
+}
+
+// --- 如何在您的 resource-parser.js 中使用 (示例) ---
+// 假设您的 parser 在某个阶段获取到了配置文件的文本内容，存储在变量 `originalConfigText`
+
+/*
+// 您的 parser 可能有类似这样的结构：
+function parse(rawText) {
+    let config = rawText;
+
+    // ... 您已有的其他解析逻辑 ...
+
+    // 在适当的时候调用 hostname 合并函数
+    // 例如，在所有其他修改之前，或者在特定标记指示需要合并时
+    if (shouldMergeHostnames) { // 您需要定义这个条件
+         config = mergeHostnamesInConfig(config);
+    }
+    
+    // ... 您已有的其他解析逻辑 ...
+
+    return config;
+}
+
+// 示例：
+const rawConfig = `
+# > 评论
+hostname = api.coolapk.com, api.coolapk.com:9001
+# > 酷安
+hostname = api.coolapk.com, dl.coolapk.com, dl.coolapk.com:9002, graph.coolapk.com
+^https?://api\.coolapk\.com/v6/(main/init|feed/replyList|account/profile) url script-response-body https://raw.githubusercontent.com/NobyDa/Script/master/coolapk-init.js
+
+# > 另一个服务
+hostname = another.service.com
+^https?://another\.service\.com/api/data url reject
+`;
+
+const processedConfig = mergeHostnamesInConfig(rawConfig);
+console.log("原始配置:");
+console.log(rawConfig);
+console.log("\\n--- 合并后 ---");
+console.log(processedConfig);
+
+// 预期的输出:
+// hostname = api.coolapk.com, api.coolapk.com:9001, dl.coolapk.com, dl.coolapk.com:9002, graph.coolapk.com, another.service.com
+// # > 评论
+// # > 酷安
+// ^https?://api\.coolapk\.com/v6/(main/init|feed/replyList|account/profile) url script-response-body https://raw.githubusercontent.com/NobyDa/Script/master/coolapk-init.js
+// # > 另一个服务
+// ^https?://another\.service\.com/api/data url reject
+
+*/
 /** 
 ☑️ 资源解析器 ©𝐒𝐡𝐚𝐰𝐧  ⟦2025-05-16 10:58⟧
 ----------------------------------------------------------
@@ -138,8 +247,6 @@ var para1 = para.slice(para.indexOf("#") + 1).replace(/\$type/g,"node_type_para_
 var mark0 = para.indexOf("#") != -1 ? true : false; //是否有參數需要解析
 var Pinfo = mark0 && para1.indexOf("info=") != -1 ? para1.split("info=")[1].split("&")[0] : 0;
 var ntf_flow = 0;
-// [新增] 全局收集 hostname（在此插入👇）
-var hostname_list = [];
 //常用量
 const Base64 = new Base64Code();
 const escapeRegExp = str => str.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&'); //处理特殊符号以便正则匹配使用
@@ -1206,17 +1313,7 @@ function Rewrite_Filter(subs, Pin, Pout,Preg,Pregout) {
             const notecheck = (item) => subi.indexOf(item) == 0
             if (noteK.some(notecheck)) { // 注释项跳过 
                 continue;
-            }     // [新增] 捕获 hostname 行（在此插入👇）
-    if (l.toLowerCase().startsWith("hostname")) {
-        const domains = l.split(/hostname\s*=\s*/i)[1] || "";
-        domains.split(",").forEach(d => {
-            const domain = d.trim();
-            if (domain) hostname_list.push(domain);
-        });
-        lines[i] = ""; // 删除原始行
-        continue; // 跳过后续处理
-    }
-            else if (hnc == 0 && subii.indexOf("hostname=") == 0) { //hostname 部分
+            } else if (hnc == 0 && subii.indexOf("hostname=") == 0) { //hostname 部分
                 hostname = (Phin0 || Phout0 || Preg || Pregout) ? HostNamecheck(subi, Phin0, Phout0) : subi;//hostname 部分
             } else if (subii.indexOf("hostname=") != 0) { //rewrite 部分
                 var inflag = Rcheck(subi, Pin);
@@ -3931,15 +4028,3 @@ function OR(...args) {
 function NOT(array) {
     return array.map(c => !c);
 }
-let output = [];
-fl.forEach((item) => { output.push(item); });
-output.push(""); // 空行分隔
-nol.forEach((item) => { output.push(item); });
-
-// [新增] 合并 hostname 到末尾（在此插入👇）
-if (hostname_list.length > 0) {
-    const uniqueHosts = [...new Set(hostname_list)];
-    output.push("hostname = " + uniqueHosts.join(", "));
-}
-
-return output.join("\n");
