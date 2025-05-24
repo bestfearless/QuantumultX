@@ -1,34 +1,31 @@
-// ====== 插入到解析器文件顶部 ======
+// ====== 插入到文件顶部 ======
 var __hostnames = new Set();
 
-// 劫持原解析器的行处理逻辑
-var __originalProcessLine = processLine;
-processLine = function(line) {
-  const trimmed = line.trim();
-  
-  // 捕获所有 hostname 行
-  if (/^hostname\s*=/i.test(trimmed)) {
-    const domains = trimmed.split(/hostname\s*=\s*/i)[1] || "";
-    domains.split(",").forEach(d => {
-      const domain = d.trim();
-      if (domain) __hostnames.add(domain);
-    });
-    return ""; // 删除原始行
-  }
-  
-  return __originalProcessLine(line);
-};
+// 劫持核心解析逻辑（兼容性更强的方案）
+var __originalParse = parse;
+parse = function(content) {
+  // 预处理：收集所有 hostname
+  content.split("\n").forEach(line => {
+    const trimmed = line.trim();
+    if (/^\s*hostname\s*=/i.test(trimmed)) {
+      const domains = trimmed.split(/hostname\s*=\s*/i)[1] || "";
+      domains.split(",").forEach(d => {
+        const domain = d.trim();
+        if (domain) __hostnames.add(domain);
+      });
+    }
+  });
 
-// 劫持最终输出
-var __originalFinalize = finalize;
-finalize = function(output) {
-  const result = __originalFinalize(output);
-  // 插入合并行到末尾
-  return __hostnames.size > 0 
-    ? result + "\nhostname = " + Array.from(__hostnames).join(", ")
-    : result;
+  // 生成原始配置
+  let result = __originalParse(content);
+
+  // 合并 hostname 到末尾（确保字符串格式）
+  if (__hostnames.size > 0) {
+    result += "\nhostname = " + Array.from(__hostnames).join(", ");
+  }
+
+  return result;
 };
-// ====== 代码结束 ======
 // ====== 代码结束 ======
 /** 
 ☑️ 资源解析器 ©𝐒𝐡𝐚𝐰𝐧  ⟦2025-05-16 10:58⟧
