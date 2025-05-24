@@ -1,4 +1,3 @@
-// —— 全局收集所有 hostname —— 
 let GlobalHostNameSet = new Set();
 /** 
 ☑️ 资源解析器 ©𝐒𝐡𝐚𝐰𝐧  ⟦2025-05-16 10:58⟧
@@ -346,7 +345,9 @@ function Parser() {
   } else {
     total=""
   }
-    $done({ content: total });
+    const mergedHost = GetMergedHostName();
+total = [mergedHost, total].filter(Boolean).join('\n');
+$done({ content: total });
 }
 
 if (typeof($resource)!=="undefined" && PProfile == 0) {
@@ -507,7 +508,9 @@ function ResourceParse() {
         //$notify("添加流量信息","xxx","xxxx")
         $done({ content: total, info: {bytes_used: 3073741824, bytes_remaining: 2147483648, expire_date: 1854193966}});
       //$notify("done?","strange")
-      } else { $done({ content: total });}
+      } else { const mergedHost = GetMergedHostName();
+total = [mergedHost, total].filter(Boolean).join('\n');
+$done({ content: total });}
     } else {
       if(Perror == 0) {
       $notify("❓❓ 友情提示 ➟ "+ "⟦" + subtag + "⟧", "⚠️⚠️ 解析后无有效内容", "🚥🚥 请自行检查相关参数, 或者点击通知跳转并发送链接反馈", bug_link)
@@ -1207,7 +1210,6 @@ function Rewrite_Filter(subs, Pin, Pout,Preg,Pregout) {
             if (noteK.some(notecheck)) { // 注释项跳过 
                 continue;
             } else if (hnc == 0 && subii.indexOf("hostname=") == 0) { //hostname 部分
-                hostname = (Phin0 || Phout0 || Preg || Pregout) ? HostNamecheck(subi, Phin0, Phout0) : subi;//hostname 部分
             } else if (subii.indexOf("hostname=") != 0) { //rewrite 部分
                 var inflag = Rcheck(subi, Pin);
                 var outflag = Rcheck(subi, Pout);
@@ -3920,88 +3922,9 @@ function OR(...args) {
 
 function NOT(array) {
     return array.map(c => !c);
-  // —— 在 HostNamecheck 函数里收集每个模块/每次调用的 hostname —— 
-function HostNamecheck(content, parain, paraout) {
-    var hname = content.replace(/ /g, "").split("=")[1].split(",");
-    var nname = [];
-    var dname = [];
-    // —— 原有筛选逻辑不变 —— 
-
-    for (var i = 0; i < hname.length; i++) {
-        var dd = hname[i];
-        const excludehn = (item) => dd.indexOf(item) != -1;
-        if (paraout && paraout != "") {
-            if (!paraout.some(excludehn)) {
-                if (parain && parain != "") {
-                    if (parain.some(excludehn)) {
-                        nname.push(hname[i]);
-                    } else {
-                        dname.push(hname[i]);
-                    }
-                } else {
-                    nname.push(hname[i]);
-                }
-            } else {
-                dname.push(hname[i]);
-            }
-        } else if (parain && parain != "") {
-            if (parain.some(excludehn)) {
-                nname.push(hname[i]);
-            } else {
-                dname.push(hname[i]);
-            }
-        } else {
-            nname.push(hname[i]);
-        }
-    }
-    // —— 原有通知逻辑不变 —— 
-
-    if (Pntf0 != 0) {
-        // … 通知部分省略 …
-    }
-    if (nname.length == 0) {
-        // … 通知空列表 …
-    }
-    if (Preg) {
-        nname = nname.map(Regex).filter(Boolean);
-        RegCheck(nname, "主机名hostname","regex", Preg);
-    }
-    if (Pregout) {
-        nname = nname.map(RegexOut).filter(Boolean);
-        RegCheck(nname, "主机名hostname","regout", Pregout);
-    }
-
-    // —— **关键：收集到全局集合** —— 
-    nname.forEach(h => GlobalHostNameSet.add(h));
-
-    // —— 返回该模块处理后的 hostname 字符串，不再 push 到 finalConf —— 
-    return "hostname=" + nname.join(", ");
 }
 
-// —— 新增：生成合并后 hostname—— 
 function GetMergedHostName() {
   if (GlobalHostNameSet.size === 0) return "";
   return "hostname=" + Array.from(GlobalHostNameSet).join(",");
-}
-
-// —— 修改最终输出处：只在最后一次 $done 前插入合并后的 hostname —— 
-// 在脚本中找到最后的 $done({ content: total }); 或 $done({ content: finalConf.join('\n') });
-
-/*
-  假设是 $done({ content: total });
-  将其替换为：
-    const mergedHost = GetMergedHostName();
-    total = [mergedHost, total].filter(Boolean).join('\n');
-    $done({ content: total });
-*/
-
-// 例如：
-$done({ content: GetMergedHostName() + "\n" + total });
-
-// 或者如果最后使用 finalConf：
-/*
-const mergedHost = GetMergedHostName();
-finalConf.unshift(mergedHost);
-$done({ content: finalConf.join('\n') });
-*/
 }
