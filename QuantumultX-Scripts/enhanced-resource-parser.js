@@ -1,7 +1,7 @@
 // ====== 插入到文件顶部 ======
 var __hostnames = new Set();
 
-// 劫持核心解析逻辑（兼容性更强的方案）
+// 劫持核心解析逻辑（兼容性优化版）
 var __originalParse = parse;
 parse = function(content) {
   // 预处理：收集所有 hostname
@@ -16,19 +16,21 @@ parse = function(content) {
     }
   });
 
-  // 生成原始配置
+  // 生成原始配置（确保字符串类型）
   let result = __originalParse(content);
-
-  // 合并 hostname 到末尾（确保字符串格式）
-  if (__hostnames.size > 0) {
-    result += "\nhostname = " + Array.from(__hostnames).join(", ");
+  if (Array.isArray(result)) { // 原解析器返回数组则转换为字符串
+    result = result.join("\n");
   }
 
-  return result;
+  // 合并 hostname 到末尾（严格遵循格式）
+  if (__hostnames.size > 0) {
+    const hostnameLine = "\nhostname = " + Array.from(__hostnames).join(", ");
+    result += hostnameLine;
+  }
+
+  return result; // 确保最终返回字符串
 };
 // ====== 代码结束 ======
-*/
-
 //beginning 解析器正常使用，調試註釋此部分
 
 let [link0, content0, subinfo] = [$resource.link, $resource.content, $resource.info]
