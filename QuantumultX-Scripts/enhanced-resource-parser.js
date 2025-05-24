@@ -1,30 +1,33 @@
-// ====== Hostname 自动合并模块（用户新增） ======
-var __hostnames = new Set(); // 全局存储去重后的 hostname
+// ====== 插入到文件顶部（无需其他修改） ======
+var __hostnames = [];
+var __originalParse = typeof parse === "function" ? parse : function() {};
 
-// 劫持原解析流程 - 预处理所有行
-var __originalLines = lines; // 备份原始配置行
-lines = __originalLines.map(line => {
-  const trimmed = line.trim();
-  // 捕获 hostname 行并收集域名
-  if (trimmed.toLowerCase().startsWith("hostname")) {
-    const domains = trimmed.split(/hostname\s*=\s*/i)[1] || "";
-    domains.split(",").forEach(d => {
-      const domain = d.trim();
-      if (domain) __hostnames.add(domain);
-    });
-    return ""; // 删除原始行
+// 劫持解析流程
+parse = function(content) {
+  // 预处理：收集所有 hostname
+  content.split("\n").forEach(line => {
+    var l = line.trim();
+    if (/^hostname\s*=/i.test(l)) {
+      var domains = l.split(/hostname\s*=\s*/i)[1] || "";
+      domains.split(",").forEach(d => {
+        var domain = d.trim();
+        if (domain) __hostnames.push(domain);
+      });
+    }
+  });
+  
+  // 生成原始配置
+  var originalOutput = __originalParse(content);
+  
+  // 合并 hostname 到末尾
+  if (__hostnames.length > 0) {
+    var uniqueHosts = [...new Set(__hostnames)];
+    originalOutput += "\nhostname = " + uniqueHosts.join(", ");
   }
-  return line; // 其他行保持不变
-});
-
-// 劫持最终输出 - 插入合并后的 hostname
-var __originalOutput = output; // 备份原始输出
-output = [...__originalOutput]; // 复制原始输出
-if (__hostnames.size > 0) {
-  output.push(""); // 空行分隔
-  output.push("hostname = " + Array.from(__hostnames).join(", ")); // 插入合并行到末尾
-}
-// ====== 模块结束 ======
+  
+  return originalOutput;
+};
+// ====== 代码结束 ======
 /** 
 ☑️ 资源解析器 ©𝐒𝐡𝐚𝐰𝐧  ⟦2025-05-16 10:58⟧
 ----------------------------------------------------------
