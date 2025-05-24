@@ -1,4 +1,0 @@
-hostname = a.com
-hostname= b.com
-
-^http://example.com reject
