@@ -114,6 +114,7 @@ let version = typeof $environment != "undefined" ? Number($environment.version.s
 let Perror = 0 //错误类型
 
 const ADDRes = `quantumult-x:///add-resource?remote-resource=url-encoded-json`
+var hostname_list = [];
 var RLink0 = {
   "filter_remote": [],
   "rewrite_remote": [],
@@ -132,7 +133,8 @@ content0 = content0.indexOf("DOCTYPE html") != -1 && link0.indexOf("github.com")
 content0 = link0.indexOf("nsloon.com/openloon/import?plugin=") != -1 ? ToLink(link0) : content0 ;
 //ends 正常使用部分，調試註釋此部分
 
-
+// 新增：全局收集 hostname
+var hostname_list = [];
 var para = /^(http|https)\:\/\//.test(link0) ? link0 : content0.split("\n")[0];
 var para1 = para.slice(para.indexOf("#") + 1).replace(/\$type/g,"node_type_para_prefix").replace(/\$emoji/g,"node_emoji_flag_prefix").replace(/\$tag/g,"node_tag_prefix").replace(/\$index/g,"node_index_prefix") //防止参数中其它位置也存在"#"
 var mark0 = para.indexOf("#") != -1 ? true : false; //是否有參數需要解析
@@ -162,8 +164,6 @@ SubFlow() //流量通知
 
 
 // 参数获取
-// ========== 在文件顶部变量声明区域添加 ==========
-var hostnameCollector = []; // 新增：全局收集所有 hostname 行
 var Pin0 = mark0 && para1.indexOf("in=") != -1 ? (para1.split("in=")[1].split("&")[0].split("+")).map(decodeURIComponent) : null;
 var Pout0 = mark0 && (para.indexOf("#out=") != -1 || para.indexOf("&out=") != -1)? ((para.indexOf("#out=")!=-1? para.split("#out="): para.split("&out="))[1].split("&")[0].split("+")).map(decodeURIComponent) : null;
 var Psfilter = mark0 && para1.indexOf("sfilter=") != -1 ? Base64.decode(para1.split("sfilter=")[1].split("&")[0]) : null; // script filter
@@ -1221,7 +1221,15 @@ function Rewrite_Filter(subs, Pin, Pout,Preg,Pregout) {
             }
         }
     }
-
+    // 新增：捕获 hostname 行
+if (content.toLowerCase().trim().startsWith("hostname")) {
+    let domains = content.split("=")[1] || "";
+    domains.split(",").forEach(d => {
+        let domain = d.trim();
+        if (domain) hostname_list.push(domain);
+    });
+    return ""; // 禁止输出原始 hostname 行
+}
     if (Pntf0 != 0) {
         nowrite = dwrite.length <= 10 ? emojino[dwrite.length] : dwrite.length
         no1write = Nlist.length <= 10 ? emojino[Nlist.length] : Nlist.length
@@ -1256,28 +1264,55 @@ function Rewrite_Filter(subs, Pin, Pout,Preg,Pregout) {
 
 // 主机名处理
 function HostNamecheck(content, parain, paraout) {
-    // 步骤1: 合并多行 hostname
-    const hostLines = content.split(/\r?\n/)
-        .map(line => line.replace(/^\s*hostname\s*=\s*/i, "")) // 提取值部分
-        .filter(line => line.trim() !== "");
-
-    let hname = [];
-    for (const line of hostLines) {
-        hname.push(...line.split(',').map(v => v.trim()).filter(Boolean));
-    }
-    hname = [...new Set(hname)]; // 去重
-
-    // 步骤2: 原过滤逻辑保持不变
+    var hname = content.replace(/ /g, "").split("=")[1].split(",");
     var nname = [];
-    var dname = [];
+    var dname = []; //删除项
     for (var i = 0; i < hname.length; i++) {
-        dd = hname[i];
+        dd = hname[i]
         const excludehn = (item) => dd.indexOf(item) != -1;
-        // ... 原有过滤逻辑完全不变 ...
+        if (paraout && paraout != "") { //存在 out 参数时
+            if (!paraout.some(excludehn)) { //out 未命中🎯️
+                if (parain && parain != "") {
+                    if (parain.some(excludehn)) { //Pin 命中🎯️
+                        nname.push(hname[i])
+                    } else {
+                        dname.push(hname[i])
+                    } //Pin 未命中🎯️的记录
+                } else { nname.push(hname[i]) } //无in 参数    
+            } else { dname.push(hname[i]) } //out 参数命中
+        } else if (parain && parain != "") { //不存在 out，但有 in 参数时
+            if (parain.some(excludehn)) { //Pin 命中🎯️
+                nname.push(hname[i])
+            } else { dname.push(hname[i]) }
+        } else {
+            nname.push(hname[i])
+        }
+    } //for j
+    if (Pntf0 != 0) {
+        if (paraout || parain) {
+            var noname = dname.length <= 10 ? emojino[dname.length] : dname.length
+            var no1name = nname.length <= 10 ? emojino[nname.length] : nname.length
+            if (parain && no1name != " 0️⃣ ") {
+                $notify("🤖 " + "重写引用  ➟ " + "⟦" + subtag + "⟧", "⛔️ 筛选参数: " + pfihn + pfohn, "☠️ 主机名 hostname 中已保留以下" + no1name + "个匹配项:" + "\n ⨷ " + nname.join(","), rwhost_link)
+            } else if (dname.length > 0) {
+                $notify("🤖 " + "重写引用  ➟ " + "⟦" + subtag + "⟧", "⛔️ 筛选参数: " + pfihn + pfohn, "☠️ 主机名 hostname 中已删除以下" + noname + "个匹配项:" + "\n ⨷ " + dname.join(","), rwhost_link)
+            }
+        }
     }
-
-    // 步骤3: 返回标准化格式
-    return nname.length > 0 ? `hostname = ${nname.join(", ")}` : "";
+    if (nname.length == 0) {
+        $notify("🤖 " + "重写引用  ➟ " + "⟦" + subtag + "⟧", "⛔️ 筛选参数: " + pfihn + pfohn, "⚠️ 主机名 hostname 中剩余 0️⃣ 项, 请检查参数及原始链接", nan_link)
+    }
+    if(Preg){ nname = nname.map(Regex).filter(Boolean)
+      RegCheck(nname, "主机名hostname","regex", Preg) }
+    if(Pregout){ nname = nname.map(RegexOut).filter(Boolean)
+      RegCheck(nname, "主机名hostname", "regout", Pregout) }
+    hname = "hostname=" + nname.join(", ");
+    return hname
+}
+// 新增：合并 hostname
+if (hostname_list.length > 0) {
+    let unique_hosts = [...new Set(hostname_list)]; // 去重
+    output.unshift("hostname = " + unique_hosts.join(", ")); // 插入到第一行
 }
 
 //Rewrite 筛选的函数
