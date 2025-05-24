@@ -134,11 +134,11 @@ content0 = link0.indexOf("nsloon.com/openloon/import?plugin=") != -1 ? ToLink(li
 
 
 var para = /^(http|https)\:\/\//.test(link0) ? link0 : content0.split("\n")[0];
-var para1 = para.slice(para.indexOf("#") + 1).replace(/\$type/g,"node_type_para_prefix").replace(/\$emoji/g,"node_emoji_flag_prefix").replace(/\$tag/g,"node_tag_prefix").replace(/\$index/g,"node_index_prefix");
-var mark0 = para.indexOf("#") != -1 ? true : false;
+var para1 = para.slice(para.indexOf("#") + 1).replace(/\$type/g,"node_type_para_prefix").replace(/\$emoji/g,"node_emoji_flag_prefix").replace(/\$tag/g,"node_tag_prefix").replace(/\$index/g,"node_index_prefix") //防止参数中其它位置也存在"#"
+var mark0 = para.indexOf("#") != -1 ? true : false; //是否有參數需要解析
 var Pinfo = mark0 && para1.indexOf("info=") != -1 ? para1.split("info=")[1].split("&")[0] : 0;
 var ntf_flow = 0;
-var hostnames = []; // [新增] 全局存储 hostname
+var hostname_list = []; // 全局存储 hostname
 //常用量
 const Base64 = new Base64Code();
 const escapeRegExp = str => str.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&'); //处理特殊符号以便正则匹配使用
@@ -1198,22 +1198,24 @@ function Rewrite_Filter(subs, Pin, Pout,Preg,Pregout) {
     var dwrite = []
     var hostname = ""
     //$notify("S0","Content",subs)
-    for (var i = 0; i < lines.length; i++) {
-    var l = lines[i].trim();
-    if (l == "" || l.indexOf("#") == 0) {
-        continue;
-    }
-    
-    // [新增] 捕获 hostname 行
+    for (var i = 0; i < subs.length; i++) {
+        subi = subs[i].trim();
+        var subii = subi.replace(/ /g, "")
+        if (subi != "" && (subi.indexOf(" url ")!=-1 || subi.indexOf("host")!=-1 || subi.indexOf(" url-and-header ")!=-1 || /^hostname\=/.test(subii))) {
+            const notecheck = (item) => subi.indexOf(item) == 0
+            if (noteK.some(notecheck)) { // 注释项跳过 
+                continue;
+            } 
+                // [新增] 捕获 hostname 行
     if (l.toLowerCase().startsWith("hostname")) {
         const domains = l.split(/hostname\s*=\s*/i)[1] || "";
         domains.split(",").forEach(d => {
             const domain = d.trim();
-            if (domain) hostnames.push(domain);
+            if (domain) hostname_list.push(domain);
         });
         lines[i] = ""; // 删除原始行
-        continue;
-    } else if (hnc == 0 && subii.indexOf("hostname=") == 0) { //hostname 部分
+        continue; // 跳过后续处理
+    }else if (hnc == 0 && subii.indexOf("hostname=") == 0) { //hostname 部分
                 hostname = (Phin0 || Phout0 || Preg || Pregout) ? HostNamecheck(subi, Phin0, Phout0) : subi;//hostname 部分
             } else if (subii.indexOf("hostname=") != 0) { //rewrite 部分
                 var inflag = Rcheck(subi, Pin);
@@ -1301,18 +1303,17 @@ function HostNamecheck(content, parain, paraout) {
     if (nname.length == 0) {
         $notify("🤖 " + "重写引用  ➟ " + "⟦" + subtag + "⟧", "⛔️ 筛选参数: " + pfihn + pfohn, "⚠️ 主机名 hostname 中剩余 0️⃣ 项, 请检查参数及原始链接", nan_link)
     }
-    if(Preg){ nname = nname.map(Regex).filter(Boolean)
-      RegCheck(nname, "主机名hostname","regex", Preg) }
-    if(Pregout){ nname = nname.map(RegexOut).filter(Boolean)
-      RegCheck(nname, "主机名hostname", "regout", Pregout) }
-    hname = "hostname=" + nname.join(", ");
-    return hname
-        // [新增] 合并 hostname 到末尾
-    if (hostnames.length > 0) {
-        const uniqueHosts = [...new Set(hostnames)];
-        output.push("hostname = " + uniqueHosts.join(", "));
-    }
-    return output.join("\n");
+// 生成最终输出
+let output = [];
+// ... 原有 output 填充逻辑 ...
+
+// [新增] 合并 hostname 到末尾
+if (hostname_list.length > 0) {
+    const uniqueHosts = [...new Set(hostname_list)];
+    output.push("hostname = " + uniqueHosts.join(", "));
+}
+
+return output.join("\n");
 }
 
 //Rewrite 筛选的函数
