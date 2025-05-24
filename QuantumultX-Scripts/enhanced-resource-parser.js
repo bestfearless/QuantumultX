@@ -3847,3 +3847,4 @@ function OR(...args) {
 function NOT(array) {
     return array.map(c => !c);
 }
+$notify("调试信息", "合并结果", result);
