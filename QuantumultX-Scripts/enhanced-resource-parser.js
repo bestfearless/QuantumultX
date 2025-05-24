@@ -1,39 +1,26 @@
-// ====== 替换文件全部内容 ======
-// 注意：此代码需完全覆盖原解析器内容
-var hostnames = new Set();
-
-// 预处理：捕获并删除所有 hostname 行
-var modifiedContent = content.split("\n").map(line => {
-  var trimmed = line.trim();
-  if (/^\s*hostname\s*=/i.test(trimmed)) {
-    var domains = trimmed.split(/hostname\s*=\s*/i)[1] || "";
-    domains.split(",").forEach(d => {
-      var domain = d.trim();
-      if (domain) hostnames.add(domain);
-    });
-    return ""; // 删除原行
+// 安全版解析器代码（修复作用域污染问题）
+(() => {
+  const hostnames = new Set();
+  const modifiedContent = content.split("\n").map(line => {
+    const trimmed = line.trim();
+    if (/^\s*hostname\s*=/i.test(trimmed)) {
+      const domains = trimmed.split(/hostname\s*=\s*/i)[1]?.split(",") || [];
+      domains.forEach(d => {
+        const domain = d.trim();
+        if (domain) hostnames.add(domain);
+      });
+      return "";
+    }
+    return line;
+  }).join("\n");
+  
+  let result = parse(modifiedContent);
+  if (hostnames.size > 0) {
+    const hostnameLine = "\nhostname = " + [...hostnames].join(", ");
+    result = (typeof result === "string" ? result : "") + hostnameLine;
   }
-  return line;
-}).join("\n");
-
-// 生成原始配置
-var result = parse(modifiedContent);
-
-// 合并 hostname 到末尾（强制字符串类型）
-if (hostnames.size > 0) {
-  var hostnameLine = "\nhostname = " + Array.from(hostnames).join(", ");
-  if (typeof result === "string") {
-    result += hostnameLine;
-  } else {
-    result = hostnameLine; // 容错处理
-  }
-}
-
-// 返回最终结果（确保字符串类型）
-if (typeof result !== "string") {
-  result = "";
-}
-result; // 隐式返回（避免显式 return 导致的语法错误）
+  return result;
+})();
 
 //beginning 解析器正常使用，調試註釋此部分
 
@@ -3847,4 +3834,3 @@ function OR(...args) {
 function NOT(array) {
     return array.map(c => !c);
 }
-$notify("调试信息", "合并结果", result);
