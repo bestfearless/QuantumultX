@@ -1,67 +1,55 @@
 function parse() {
-    // 输入数据校验
-    if (typeof $configuration === 'undefined' || !$configuration.allItems) {
-        $done({});
-        return;
-    }
-
-    const allHostnames = new Set();
-    const ruleSet = new Set();
+    const config = $configuration?.allItems;
+    if (!config) return $done({});
+    
+    const hostnames = new Set();
+    const rules = [];
     let currentComment = '';
     
-    // 官方标准输入处理方式
-    const lines = $configuration.allItems
-        .map(item => item.content)
-        .join('\n')
-        .split(/\r?\n/)
-        .map(line => line.trim());
-    
-    // 核心解析逻辑
-    lines.forEach(line => {
-        if (!line) return;
-        
-        // 捕获注释
-        if (line.startsWith('#')) {
-            currentComment = line;
+    // 多级内容提取
+    const rawText = config
+        .flatMap(item => item.content
+            .split(/\r?\n/)
+            .map(line => line.trim())
+        )
+        .filter(line => line && !/^\[.*\]$/.test(line)); // 过滤[section]标记
+
+    rawText.forEach(line => {
+        // 捕获带#或//的注释
+        if (/^(#|\/\/)/.test(line)) {
+            currentComment = line.replace(/^\/\//, '#');
             return;
         }
-        
-        // 处理hostname
-        if (line.toLowerCase().startsWith('hostname')) {
+
+        // 处理带通配符的hostname
+        if (/^hostname\s*=/i.test(line)) {
             line.split('=')[1]
                 ?.split(',')
-                .map(h => h.trim())
-                .filter(h => h)
-                .forEach(h => allHostnames.add(h));
+                .map(h => h.trim().replace(/^(\.\*?|\*\.)/, '')) // 标准化hostname
+                .filter(h => h.includes('.'))
+                .forEach(h => hostnames.add(h));
             currentComment = '';
             return;
         }
-        
-        // 严格验证规则格式
-        if (/^https?:\/\//.test(line)) {
-            const [_, policy] = line.split(/(url\s+[^\s]+)/);
-            if (!policy) return;
-            
-            const formattedRule = currentComment 
-                ? `${currentComment}\n${line}`
-                : line;
-            
-            ruleSet.add(formattedRule);
+
+        // 匹配所有支持的规则类型
+        if (/^(?:http|h[23]?|^[^\s=]+)=?/.test(line)) {
+            const formattedRule = currentComment ? `${currentComment}\n${line}` : line;
+            if (!rules.includes(formattedRule)) {
+                rules.push(formattedRule);
+            }
             currentComment = '';
         }
     });
-    
-    // 构建最终结果
-    const result = [];
-    if (ruleSet.size > 0) {
-        result.push(...Array.from(ruleSet));
+
+    // 构建最终输出
+    const output = [];
+    if (rules.length) output.push(...rules);
+    if (hostnames.size) {
+        output.push('', `hostname=${[...hostnames].map(h => `*.${h}`).join(',')}`);
     }
-    if (allHostnames.size > 0) {
-        result.push('\nhostname=' + Array.from(allHostnames).join(','));
-    }
-    
-    $done({content: result.join('\n')});
+
+    $done({content: output.join('\n')});
 }
 
-// QuantumultX 必须调用入口函数
 parse();
