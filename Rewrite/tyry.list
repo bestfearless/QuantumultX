@@ -1,0 +1,11 @@
+# 多点
+hostname = 2d.dmallcdn.com
+^https?:\/\/download\.dmallcdn\.com\/.*\.jpg$ url reject-200
+
+# 京东
+hostname = 1.360buyimg.com
+^https?:\/\/m\.360buyimg\.com\/mobilecms\/s\d+x\d+_jfs\/.*\.jpg$ url reject-200
+
+# 小鹏
+hostname = xps11.xiaopeng.com
+^https?:\/\/xps11\.xiaopeng\.com\/app\/resource\/pic url reject-200
