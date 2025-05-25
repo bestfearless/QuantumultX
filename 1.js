@@ -1,50 +1,67 @@
 function parse() {
-    const commentRegex = /^#.*/;
-    const hostnameRegex = /^hostname\s*=\s*([^\s,]+[,]?)+/;
-    const ruleRegex = /^(^http.+?) (url|reject|reject-dict|reject-array|reject-200|request-header|response-header|rewrite|script-response-body|script-request-header|script-echo-response)/;
-    
-    let currentComment = "";
-    let hostnames = new Set();
-    let rules = [];
-    let processed = new Set();
-    
-    $configuration.allItems
-        .map(item => item.content)
-        .join("\n")
-        .split("\n")
-        .forEach(line => {
-            let trimmed = line.trim();
-            if (!trimmed || processed.has(trimmed)) return;
-
-            processed.add(trimmed);
-            
-            if (commentRegex.test(trimmed)) {
-                currentComment = trimmed;
-            } else if (hostnameRegex.test(trimmed)) {
-                trimmed.split("=")[1]
-                    .split(",")
-                    .map(h => h.trim())
-                    .filter(h => h)
-                    .forEach(h => hostnames.add(h));
-            } else if (ruleRegex.test(trimmed)) {
-                if (currentComment) {
-                    rules.push({comment: currentComment, rule: trimmed});
-                    currentComment = "";
-                }
-            }
-        });
-
-    let result = [];
-    rules.forEach(r => {
-        result.push(r.comment + "\n" + r.rule);
-    });
-
-    if (hostnames.size > 0) {
-        result.push("\nhostname = " + [...hostnames].join(", "));
+    // 输入数据校验
+    if (typeof $configuration === 'undefined' || !$configuration.allItems) {
+        $done({});
+        return;
     }
 
-    $done(result.join("\n"));
+    const allHostnames = new Set();
+    const ruleSet = new Set();
+    let currentComment = '';
+    
+    // 官方标准输入处理方式
+    const lines = $configuration.allItems
+        .map(item => item.content)
+        .join('\n')
+        .split(/\r?\n/)
+        .map(line => line.trim());
+    
+    // 核心解析逻辑
+    lines.forEach(line => {
+        if (!line) return;
+        
+        // 捕获注释
+        if (line.startsWith('#')) {
+            currentComment = line;
+            return;
+        }
+        
+        // 处理hostname
+        if (line.toLowerCase().startsWith('hostname')) {
+            line.split('=')[1]
+                ?.split(',')
+                .map(h => h.trim())
+                .filter(h => h)
+                .forEach(h => allHostnames.add(h));
+            currentComment = '';
+            return;
+        }
+        
+        // 严格验证规则格式
+        if (/^https?:\/\//.test(line)) {
+            const [_, policy] = line.split(/(url\s+[^\s]+)/);
+            if (!policy) return;
+            
+            const formattedRule = currentComment 
+                ? `${currentComment}\n${line}`
+                : line;
+            
+            ruleSet.add(formattedRule);
+            currentComment = '';
+        }
+    });
+    
+    // 构建最终结果
+    const result = [];
+    if (ruleSet.size > 0) {
+        result.push(...Array.from(ruleSet));
+    }
+    if (allHostnames.size > 0) {
+        result.push('\nhostname=' + Array.from(allHostnames).join(','));
+    }
+    
+    $done({content: result.join('\n')});
 }
 
-// 重要：QuantumultX 需要最后执行函数
+// QuantumultX 必须调用入口函数
 parse();
