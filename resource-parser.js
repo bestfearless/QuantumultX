@@ -1,72 +1,83 @@
 function parse() {
-    const config = $configuration?.allItems;
-    if (!config) return $done({});
-    
-    const hostnames = new Set();
-    const rules = [];
-    let currentComment = [];
-    
-    // 深度处理原始数据
-    const processLine = (line) => {
-        line = line.trim().replace(/^\s*#.*|\/\*[\s\S]*?\*\//g, ''); // 清理行内注释
-        
+    // 输入数据完整性校验
+    if (!$configuration || !Array.isArray($configuration.allItems)) {
+        return $done({});
+    }
+
+    const result = {
+        rules: [],
+        hostnames: new Set(),
+        currentComment: null
+    };
+
+    // 官方标准输入处理管道
+    try {
+        $configuration.allItems.forEach(item => {
+            item.content.split(/\r?\n/).forEach(processLine);
+        });
+    } catch (e) {
+        console.log(`解析失败: ${e.message}`);
+        return $done({});
+    }
+
+    function processLine(rawLine) {
+        const line = rawLine.trim();
         if (!line) return;
-        
-        // 捕获多行注释
-        if (/^#|^\/\//.test(line)) {
-            currentComment.push(line.replace(/^\/\//, '#'));
+
+        // 处理注释（严格兼容官方格式）
+        if (/^[#;]/.test(line)) {
+            result.currentComment = line.replace(/^[#;]+/, '#');
             return;
         }
-        
-        // 处理hostname (支持所有通配符格式)
-        if (/^hostname\s*=\s*/i.test(line)) {
-            line.split('=')[1]
+
+        // 处理hostname（官方兼容格式）
+        if (/^hostname\s*=/i.test(line)) {
+            const hosts = line.split('=')[1]
                 .split(',')
                 .map(h => h.trim().replace(/^(\.|\*\.?)+|\.+$/g, '')) // 标准化处理
-                .filter(h => h && /^[a-zA-Z0-9-.]+\.[a-zA-Z]{2,}$/.test(h))
-                .forEach(h => hostnames.add(`*.${h}`));
-            currentComment = [];
+                .filter(h => /^[a-z0-9-]+\.[a-z]{2,}$/i.test(h)) // 域名有效性验证
+                .map(h => `*.${h}`);
+            
+            hosts.forEach(h => result.hostnames.add(h));
+            result.currentComment = null;
             return;
         }
-        
-        // 完整规则解析 (支持所有QX规则类型)
-        const ruleMatch = line.match(/^((?:http|h[23]?)=)?([^\s]+)(\s+)([^\s]+)(\s+)?([^\n]*)/);
+
+        // 匹配所有规则类型（官方正则）
+        const ruleMatch = line.match(/^((?:http|h[23]?)=)?([^\s]+)(\s+)(\S+)(\s+)?([^\n]*)/);
         if (ruleMatch) {
             const [_, prefix, pattern, , policy, __, args] = ruleMatch;
-            const fullRule = prefix ? 
-                `${prefix}${pattern} ${policy}${args ? ' ' + args : ''}` : 
-                `${pattern} ${policy}${args ? ' ' + args : ''}`;
-            
+            const rule = prefix ? 
+                `${prefix}${pattern} ${policy}${args ? ` ${args}` : ''}` : 
+                `${pattern} ${policy}${args ? ` ${args}` : ''}`;
+
             // 构建带注释的规则
-            if (currentComment.length > 0) {
-                rules.push(currentComment.join('\n') + '\n' + fullRule);
-                currentComment = [];
+            if (result.currentComment) {
+                result.rules.push(`${result.currentComment}\n${rule}`);
+                result.currentComment = null;
             } else {
-                rules.push(fullRule);
+                result.rules.push(rule);
             }
         }
-    };
-    
-    // 多层数据解构
-    config.forEach(item => {
-        item.content
-            .split(/\r?\n/g)
-            .map(line => line.trim())
-            .filter(line => !/^\[.*\]$/.test(line)) // 过滤[section]标签
-            .forEach(processLine);
-    });
-    
-    // 构建最终输出
+    }
+
+    // 构建最终输出（官方格式要求）
     const output = [];
-    if (rules.length > 0) {
-        output.push(...new Set(rules)); // 严格去重
+    if (result.rules.length) {
+        output.push(...result.rules);
     }
-    if (hostnames.size > 0) {
-        output.push('', `hostname=${[...hostnames].sort().join(',')}`);
+    if (result.hostnames.size) {
+        output.push('', `hostname=${[...result.hostnames].sort().join(',')}`);
     }
-    
-    $done({content: output.join('\n')});
+
+    // 严格遵循官方输出规范
+    $done({ content: output.join('\n') });
 }
 
-// 必须立即执行
-parse();
+// 异常安全执行
+try {
+    parse();
+} catch (e) {
+    console.log(`致命错误: ${e.stack}`);
+    $done({});
+}
