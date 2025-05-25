@@ -1,87 +1,67 @@
 function parse() {
-    const isStrict = false; // 是否严格模式
     const target = $configuration;
-    const hostnames = new Set();
-    const rules = [];
-    const comments = new Map();
+    if (!target || !target.allItems) return $done({});
     
-    let currentComment = "";
-    let lineIndex = 0;
-
-    // 输入预处理
-    const content = target.allItems
+    const allHosts = new Set();
+    const rules = [];
+    let currentComment = '';
+    let currentLine = '';
+    
+    // 严格遵循官方输入处理方式
+    const rawData = target.allItems
         .map(item => item.content)
-        .join("\n")
-        .split(/\r?\n/)
-        .map(line => line.replace(/#.*|\/\*[\s\S]*?\*\//g, "").trim()) // 清理注释
-        .filter(line => line !== "");
+        .join('\n')
+        .split(/\r?\n/);
 
-    // 核心解析逻辑
-    while (lineIndex < content.length) {
-        const line = content[lineIndex];
-        
-        // 捕获注释
-        if (line.startsWith("#")) {
-            currentComment = line;
-            lineIndex++;
+    for (const line of rawData) {
+        currentLine = line.trim();
+        if (!currentLine) continue;
+
+        // 处理注释 (支持#和//两种格式)
+        if (/^(#|\/\/)/.test(currentLine)) {
+            currentComment = currentLine.replace(/^[#\/]+/, '#');
             continue;
         }
 
-        // 处理hostname
-        if (line.toLowerCase().startsWith("hostname")) {
-            const hosts = line.split("=")[1]
-                .split(",")
-                .map(h => h.trim())
-                .filter(h => h !== "");
-            hosts.forEach(h => hostnames.add(h));
-            lineIndex++;
+        // 处理hostname (兼容=前后空格)
+        if (/^hostname\s*=/i.test(currentLine)) {
+            currentLine.split('=')[1]
+                .split(',')
+                .map(h => h.trim().replace(/^\.+|\.+$/g, '')) // 处理.example.com.
+                .filter(h => h && /^[a-z0-9-\.]+$/.test(h))
+                .forEach(h => allHosts.add(h));
+            currentComment = '';
             continue;
         }
 
-        // 处理规则行
-        const ruleComponents = line.match(/^([^ ]+) +(\S+)(?: +(\S+))?/);
-        if (ruleComponents) {
-            const [_, pattern, policy, args] = ruleComponents;
-            if (isValidRule(pattern, policy)) {
-                const ruleEntry = currentComment 
-                    ? `${currentComment}\n${line}` 
-                    : line;
-                rules.push(ruleEntry);
-                if (currentComment) comments.set(line, currentComment);
+        // 严格验证规则格式 (官方核心逻辑)
+        const ruleMatch = currentLine.match(/^((?:http|^[a-z]+)=)?((https?|h[23]?)[^\s]*)(\s+)(.*)/);
+        if (ruleMatch) {
+            const [_, prefix, pattern, protocol, , policy] = ruleMatch;
+            const fullRule = prefix ? `${prefix}${pattern}${policy}` : `${pattern}${policy}`;
+            
+            // 生成带注释的规则
+            const finalRule = currentComment ? `${currentComment}\n${fullRule}` : fullRule;
+            
+            // 去重处理
+            if (!rules.includes(finalRule)) {
+                rules.push(finalRule);
             }
-            currentComment = "";
-            lineIndex++;
-            continue;
+            currentComment = '';
         }
-
-        lineIndex++;
     }
 
-    // 构建最终结果
+    // 构建最终结果 (官方输出格式)
     const result = [];
     if (rules.length > 0) {
-        result.push(...[...new Set(rules)]); // 规则去重
+        result.push(...rules);
     }
-    if (hostnames.size > 0) {
-        result.push("\nhostname=" + [...hostnames].filter(Boolean).join(","));
+    if (allHosts.size > 0) {
+        result.push('', `hostname=${[...allHosts].sort().join(',')}`);
     }
 
-    $done({ content: result.join("\n") });
+    $done({ content: result.join('\n') });
 }
 
-// 有效性验证函数
-function isValidRule(pattern, policy) {
-    const validPolicies = new Set([
-        "reject", "reject-200", "reject-dict", 
-        "reject-array", "request-header", 
-        "response-header", "script-response-body",
-        "script-request-header", "script-echo-response"
-    ]);
-    
-    return pattern.startsWith("^http") && 
-           validPolicies.has(policy) && 
-           /^https?:\/\/(.*?)(\/|$)/.test(pattern);
-}
-
-// 必须调用parse函数
+// QuantumultX强制要求立即执行
 parse();
