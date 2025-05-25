@@ -1,67 +1,72 @@
 function parse() {
-    const target = $configuration;
-    if (!target || !target.allItems) return $done({});
+    const config = $configuration?.allItems;
+    if (!config) return $done({});
     
-    const allHosts = new Set();
+    const hostnames = new Set();
     const rules = [];
-    let currentComment = '';
-    let currentLine = '';
+    let currentComment = [];
     
-    // 严格遵循官方输入处理方式
-    const rawData = target.allItems
-        .map(item => item.content)
-        .join('\n')
-        .split(/\r?\n/);
-
-    for (const line of rawData) {
-        currentLine = line.trim();
-        if (!currentLine) continue;
-
-        // 处理注释 (支持#和//两种格式)
-        if (/^(#|\/\/)/.test(currentLine)) {
-            currentComment = currentLine.replace(/^[#\/]+/, '#');
-            continue;
+    // 深度处理原始数据
+    const processLine = (line) => {
+        line = line.trim().replace(/^\s*#.*|\/\*[\s\S]*?\*\//g, ''); // 清理行内注释
+        
+        if (!line) return;
+        
+        // 捕获多行注释
+        if (/^#|^\/\//.test(line)) {
+            currentComment.push(line.replace(/^\/\//, '#'));
+            return;
         }
-
-        // 处理hostname (兼容=前后空格)
-        if (/^hostname\s*=/i.test(currentLine)) {
-            currentLine.split('=')[1]
+        
+        // 处理hostname (支持所有通配符格式)
+        if (/^hostname\s*=\s*/i.test(line)) {
+            line.split('=')[1]
                 .split(',')
-                .map(h => h.trim().replace(/^\.+|\.+$/g, '')) // 处理.example.com.
-                .filter(h => h && /^[a-z0-9-\.]+$/.test(h))
-                .forEach(h => allHosts.add(h));
-            currentComment = '';
-            continue;
+                .map(h => h.trim().replace(/^(\.|\*\.?)+|\.+$/g, '')) // 标准化处理
+                .filter(h => h && /^[a-zA-Z0-9-.]+\.[a-zA-Z]{2,}$/.test(h))
+                .forEach(h => hostnames.add(`*.${h}`));
+            currentComment = [];
+            return;
         }
-
-        // 严格验证规则格式 (官方核心逻辑)
-        const ruleMatch = currentLine.match(/^((?:http|^[a-z]+)=)?((https?|h[23]?)[^\s]*)(\s+)(.*)/);
+        
+        // 完整规则解析 (支持所有QX规则类型)
+        const ruleMatch = line.match(/^((?:http|h[23]?)=)?([^\s]+)(\s+)([^\s]+)(\s+)?([^\n]*)/);
         if (ruleMatch) {
-            const [_, prefix, pattern, protocol, , policy] = ruleMatch;
-            const fullRule = prefix ? `${prefix}${pattern}${policy}` : `${pattern}${policy}`;
+            const [_, prefix, pattern, , policy, __, args] = ruleMatch;
+            const fullRule = prefix ? 
+                `${prefix}${pattern} ${policy}${args ? ' ' + args : ''}` : 
+                `${pattern} ${policy}${args ? ' ' + args : ''}`;
             
-            // 生成带注释的规则
-            const finalRule = currentComment ? `${currentComment}\n${fullRule}` : fullRule;
-            
-            // 去重处理
-            if (!rules.includes(finalRule)) {
-                rules.push(finalRule);
+            // 构建带注释的规则
+            if (currentComment.length > 0) {
+                rules.push(currentComment.join('\n') + '\n' + fullRule);
+                currentComment = [];
+            } else {
+                rules.push(fullRule);
             }
-            currentComment = '';
         }
-    }
-
-    // 构建最终结果 (官方输出格式)
-    const result = [];
+    };
+    
+    // 多层数据解构
+    config.forEach(item => {
+        item.content
+            .split(/\r?\n/g)
+            .map(line => line.trim())
+            .filter(line => !/^\[.*\]$/.test(line)) // 过滤[section]标签
+            .forEach(processLine);
+    });
+    
+    // 构建最终输出
+    const output = [];
     if (rules.length > 0) {
-        result.push(...rules);
+        output.push(...new Set(rules)); // 严格去重
     }
-    if (allHosts.size > 0) {
-        result.push('', `hostname=${[...allHosts].sort().join(',')}`);
+    if (hostnames.size > 0) {
+        output.push('', `hostname=${[...hostnames].sort().join(',')}`);
     }
-
-    $done({ content: result.join('\n') });
+    
+    $done({content: output.join('\n')});
 }
 
-// QuantumultX强制要求立即执行
+// 必须立即执行
 parse();
