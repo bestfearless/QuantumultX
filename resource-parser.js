@@ -1,9 +1,9 @@
 function parse() {
     const config = $configuration?.allItems;
-    if (!config) return $done({});
+    if (!config || !config.length) return $done({content: ""});
 
-    const hostnames = new Set();
-    const rules = [];
+    const output = [];
+    const hosts = new Set();
     let currentComment = "";
 
     // 输入处理管道
@@ -13,38 +13,43 @@ function parse() {
             if (!tline) return;
 
             // 处理注释
-            if (/^(#|\/\/)/.test(tline)) {
-                currentComment = tline.replace(/^\/\//, "#");
+            if (tline.startsWith("#") || tline.startsWith("//")) {
+                currentComment = tline.replace("//", "#");
                 return;
             }
 
             // 处理hostname
-            if (/^hostname\s*=/i.test(tline)) {
-                tline.split("=")[1]?.split(",")
-                    .map(h => h.trim().replace(/^(\.|\*\.?)+/, ""))
-                    .filter(h => /^[a-z0-9-]+\.[a-z]{2,}$/i.test(h))
-                    .forEach(h => hostnames.add(`*.${h}`));
+            if (tline.toLowerCase().startsWith("hostname")) {
+                const hostPart = tline.split("=")[1] || "";
+                hostPart.split(",").forEach(h => {
+                    const host = h.trim()
+                        .replace(/^(\.|\*\.)/, "")
+                        .replace(/\.$/, "");
+                    if (/^[a-z0-9-]+\.[a-z]{2,}$/i.test(host)) {
+                        hosts.add(`*.${host}`);
+                    }
+                });
                 currentComment = "";
                 return;
             }
 
-            // 匹配所有规则
-            if (/^(?:https?|h3|=)/i.test(tline)) {
-                const rule = currentComment ? `${currentComment}\n${tline}` : tline;
-                rules.push(rule);
+            // 匹配所有规则类型
+            if (/^(http|url|h3|=)/i.test(tline)) {
+                const ruleEntry = currentComment ? `${currentComment}\n${tline}` : tline;
+                output.push(ruleEntry);
                 currentComment = "";
             }
         });
     });
 
     // 构建输出
-    const output = [];
-    if (rules.length) output.push(...rules);
-    if (hostnames.size) {
-        output.push("", `hostname=${[...hostnames].sort().join(",")}`);
+    const result = [];
+    if (output.length > 0) result.push(...output);
+    if (hosts.size > 0) {
+        result.push("", `hostname=${[...hosts].sort().join(",")}`);
     }
 
-    $done({ content: output.join("\n") });
+    $done({ content: result.join("\n") });
 }
 
 parse();
