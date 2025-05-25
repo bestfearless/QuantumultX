@@ -1,55 +1,56 @@
+// == 核心解析逻辑 ==
 function parse() {
-    const config = $configuration?.allItems;
-    if (!config || !config.length) return $done({content: ""});
+    const input = $configuration?.allItems;
+    if (!input) return $done({});
+    
+    let output = [];
+    let hostSet = new Set();
+    let remark = "";
+    
+    // 输入流处理（官方标准方法）
+    const processLine = (line) => {
+        const tLine = line.trim();
+        if (!tLine) return;
 
-    const output = [];
-    const hosts = new Set();
-    let currentComment = "";
+        // 注释捕获（支持 # 和 //）
+        if (/^(#|\/\/)/.test(tLine)) {
+            remark = tLine.replace(/^\/\//, "#");
+            return;
+        }
 
-    // 输入处理管道
-    config.forEach(item => {
-        item.content.split(/\r?\n/).forEach(line => {
-            const tline = line.trim();
-            if (!tline) return;
+        // Hostname处理（官方格式兼容）
+        if (/^hostname\s*=/i.test(tLine)) {
+            tLine.split("=")[1].split(",")
+                .map(h => h.trim().replace(/^(\.|\*\.)/, ""))
+                .filter(h => /[\w-]+\.[a-z]{2,}$/i.test(h))
+                .forEach(h => hostSet.add(`*.${h}`));
+            remark = "";
+            return;
+        }
 
-            // 处理注释
-            if (tline.startsWith("#") || tline.startsWith("//")) {
-                currentComment = tline.replace("//", "#");
-                return;
-            }
+        // 规则匹配（覆盖所有QX规则类型）
+        const ruleReg = /^((?:http|h3)=)?(.+?)\s+(.+)/;
+        if (ruleReg.test(tLine)) {
+            const fullRule = remark ? `${remark}\n${tLine}` : tLine;
+            output.push(fullRule);
+            remark = "";
+        }
+    };
 
-            // 处理hostname
-            if (tline.toLowerCase().startsWith("hostname")) {
-                const hostPart = tline.split("=")[1] || "";
-                hostPart.split(",").forEach(h => {
-                    const host = h.trim()
-                        .replace(/^(\.|\*\.)/, "")
-                        .replace(/\.$/, "");
-                    if (/^[a-z0-9-]+\.[a-z]{2,}$/i.test(host)) {
-                        hosts.add(`*.${host}`);
-                    }
-                });
-                currentComment = "";
-                return;
-            }
-
-            // 匹配所有规则类型
-            if (/^(http|url|h3|=)/i.test(tline)) {
-                const ruleEntry = currentComment ? `${currentComment}\n${tline}` : tline;
-                output.push(ruleEntry);
-                currentComment = "";
-            }
-        });
+    // 输入管道处理
+    input.forEach(item => {
+        item.content.split(/\r?\n/).forEach(processLine);
     });
 
-    // 构建输出
+    // 构建输出（严格符合QX规范）
     const result = [];
-    if (output.length > 0) result.push(...output);
-    if (hosts.size > 0) {
-        result.push("", `hostname=${[...hosts].sort().join(",")}`);
+    if (output.length) result.push(...output);
+    if (hostSet.size) {
+        result.push("", `hostname=${[...hostSet].sort().join(",")}`);
     }
 
     $done({ content: result.join("\n") });
 }
 
-parse();
+// == 异常安全执行 ==
+typeof $configuration !== "undefined" ? parse() : $done({});
