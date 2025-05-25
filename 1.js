@@ -1,37 +1,50 @@
-/*************************************
+function parse() {
+    const commentRegex = /^#.*/;
+    const hostnameRegex = /^hostname\s*=\s*([^\s,]+[,]?)+/;
+    const ruleRegex = /^(^http.+?) (url|reject|reject-dict|reject-array|reject-200|request-header|response-header|rewrite|script-response-body|script-request-header|script-echo-response)/;
+    
+    let currentComment = "";
+    let hostnames = new Set();
+    let rules = [];
+    let processed = new Set();
+    
+    $configuration.allItems
+        .map(item => item.content)
+        .join("\n")
+        .split("\n")
+        .forEach(line => {
+            let trimmed = line.trim();
+            if (!trimmed || processed.has(trimmed)) return;
 
-Quantumult X Resource Parser
-功能：合并 hostname，保留规则注释
-说明：适用于将带 hostname 的规则合并输出，统一写在末尾
+            processed.add(trimmed);
+            
+            if (commentRegex.test(trimmed)) {
+                currentComment = trimmed;
+            } else if (hostnameRegex.test(trimmed)) {
+                trimmed.split("=")[1]
+                    .split(",")
+                    .map(h => h.trim())
+                    .filter(h => h)
+                    .forEach(h => hostnames.add(h));
+            } else if (ruleRegex.test(trimmed)) {
+                if (currentComment) {
+                    rules.push({comment: currentComment, rule: trimmed});
+                    currentComment = "";
+                }
+            }
+        });
 
-**************************************/
-
-let body = $response.body;
-let lines = body.split('\n');
-
-let finalRules = [];
-let hostnames = new Set();
-let tempLines = [];
-
-for (let line of lines) {
-  let trimmed = line.trim();
-
-  if (trimmed.startsWith("hostname")) {
-    let hosts = trimmed.split("=")[1].split(",").map(h => h.trim());
-    hosts.forEach(h => {
-      if (h) hostnames.add(h);
+    let result = [];
+    rules.forEach(r => {
+        result.push(r.comment + "\n" + r.rule);
     });
-  } else if (trimmed.length > 0) {
-    tempLines.push(line);
-  }
+
+    if (hostnames.size > 0) {
+        result.push("\nhostname = " + [...hostnames].join(", "));
+    }
+
+    $done(result.join("\n"));
 }
 
-finalRules = [...tempLines];
-
-// 添加空行后统一添加合并的 hostname
-if (hostnames.size > 0) {
-  finalRules.push("");
-  finalRules.push("hostname = " + [...hostnames].join(", "));
-}
-
-$done({ body: finalRules.join("\n") });
+// 重要：QuantumultX 需要最后执行函数
+parse();
