@@ -1,55 +1,48 @@
-console.log("RAW INPUT:\n" + JSON.stringify($configuration.allItems));
+// 最终验证通过的解析器代码
 function parse() {
-    const config = $configuration?.allItems;
-    if (!config || !Array.isArray(config)) return $done({});
+    if (!$configuration?.allItems) return $done({});
+    
+    const output = [];
+    const hosts = new Set();
+    let comment = "";
+    
+    $configuration.allItems.forEach(item => {
+        item.content.split(/\r?\n/).forEach(line => {
+            const tline = line.trim();
+            if (!tline) return;
 
-    const hostnames = new Set();
-    const rules = [];
-    let currentComment = null;
+            // 捕获注释
+            if (/^(#|\/\/)/.test(tline)) {
+                comment = tline.replace(/^\/\//, "#");
+                return;
+            }
 
-    // 输入处理管道（兼容多级嵌套）
-    const lines = config
-        .flatMap(item => item.content.split(/\r?\n/))
-        .map(line => line.trim())
-        .filter(line => line && !/^\[.*\]$/.test(line));
+            // 处理hostname
+            if (/^hostname\s*=/i.test(tline)) {
+                tline.split("=")[1].split(",").forEach(h => {
+                    const host = h.trim().replace(/^(\.|\*\.)/, "");
+                    if (/^[a-z0-9-]+\.[a-z]{2,}$/i.test(host)) {
+                        hosts.add(`*.${host}`);
+                    }
+                });
+                comment = "";
+                return;
+            }
 
-    // 核心解析逻辑（严格匹配官方实现）
-    lines.forEach(line => {
-        // 处理注释（支持 # 和 //）
-        if (/^(#|\/\/)/.test(line)) {
-            currentComment = line.replace(/^\/\//, '#');
-            return;
-        }
-
-        // 处理 Hostname（兼容 = 前后空格）
-        if (/^hostname\s*=/i.test(line)) {
-            line.split('=')[1]?.split(',')
-                .map(h => h.trim().replace(/^(\.|\*\.?)+/, ''))
-                .filter(h => /^[a-z0-9-]+\.[a-z]{2,}$/i.test(h))
-                .forEach(h => hostnames.add(`*.${h}`));
-            currentComment = null;
-            return;
-        }
-
-        // 匹配所有规则类型（包括 h3=、script 等）
-        const ruleMatch = line.match(/^(?:(http|h3)=)?([^\s]+)(?:\s+)(.+)/);
-        if (ruleMatch) {
-            const [_, prefix, pattern, policy] = ruleMatch;
-            const fullRule = prefix ? `${prefix}=${pattern} ${policy}` : line;
-            const formattedRule = currentComment ? `${currentComment}\n${fullRule}` : fullRule;
-            rules.push(formattedRule);
-            currentComment = null;
-        }
+            // 匹配规则
+            if (/^(?:http|h3|=|\^)/i.test(tline)) {
+                output.push(comment ? `${comment}\n${tline}` : tline);
+                comment = "";
+            }
+        });
     });
 
-    // 构建输出（强制符合官方格式）
-    const output = [];
-    if (rules.length > 0) output.push(...rules);
-    if (hostnames.size > 0) {
-        output.push('', `hostname=${[...hostnames].sort().join(',')}`);
-    }
-
-    $done({ content: output.join('\n') });
+    // 构建结果
+    const result = [];
+    if (output.length) result.push(...output);
+    if (hosts.size) result.push("", `hostname=${[...hosts].sort().join(",")}`);
+    
+    $done({ content: result.join("\n") });
 }
 
 parse();
