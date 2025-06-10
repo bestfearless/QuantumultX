@@ -21,6 +21,3 @@ hostname = app-api.smzdm.com, h5.smzdm.com, haojia-api.smzdm.com, haojia.m.smzdm
 ^https:\/\/haojia-api\.smzdm\.com\/home\/list\? url jsonjq-response-body '.data.rows |= map(select(.cell_type == "39001")) | .data.banner_v2 |= map(select(.cell_type == "21028"))'
 ^https:\/\/s-api\.smzdm\.com\/sou\/list_v10\? url jsonjq-response-body '.data.rows |= map(select(.model_type != "ads")) | .data.top_aladdin |= map(select(has("ad") | not))'
 ^https:\/\/s-api\.smzdm\.com\/sou\/filter\/tags\/hot_tags\? url jsonjq-response-body '.data.search_hot.home |= map(select(.article_tag.article_title != "广告"))'
-
-# rules
-host, adx-api.zdmimg.com, reject
