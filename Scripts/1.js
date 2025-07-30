@@ -1299,7 +1299,33 @@ function HostNamecheck(content, parain, paraout) {
     hname = "hostname=" + nname.join(", ");
     return hname
 }
+// === hostname 合并功能 ===
+(function mergeHostnames() {
+  try {
+    const lines = mergedContent.split(/\r?\n/);
+    const hostnames = new Set();
+    const bodyLines = [];
 
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (/^hostname\s*=/.test(trimmed)) {
+        const hosts = trimmed.replace(/^hostname\s*=\s*/, "").split(/\s*,\s*/);
+        for (const h of hosts) {
+          if (h) hostnames.add(h);
+        }
+      } else {
+        bodyLines.push(line);
+      }
+    }
+
+    const merged = "hostname = " + Array.from(hostnames).join(", ");
+    mergedContent = [merged, ...bodyLines].join("\n");
+  } catch (e) {
+    // 合并失败时保留原内容
+    console.log("hostname merge error:", e);
+  }
+})();
+// === hostname 合并功能结束 ===
 //Rewrite 筛选的函数
 function Rcheck(content, param) {
     name = content.toUpperCase()
